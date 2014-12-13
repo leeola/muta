@@ -1,0 +1,4 @@
+/.agignore
+/.godeps
+/_test/tmp
+/example
