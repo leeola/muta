@@ -8,7 +8,7 @@ package main
 import "github.com/docopt/docopt-go"
 
 func ParseArgs() {
-	usage := `Muta(te) Build System
+	usage := `Muta(te)
 
 Usage:
 	muta [task]
