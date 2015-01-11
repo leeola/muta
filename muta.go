@@ -1,7 +1,7 @@
 //
 // # Muta Bin
 //
-// Handle the CLI in/out of a `muta.go` file that was ran.
+// Handle the CLI in/out of a `Muta` file that was ran.
 //
 package main
 
