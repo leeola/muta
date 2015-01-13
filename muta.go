@@ -3,7 +3,7 @@
 //
 // Handle the CLI in/out of a `Muta` file that was ran.
 //
-package main
+package muta
 
 import "github.com/docopt/docopt-go"
 

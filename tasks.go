@@ -1,8 +1,7 @@
 //
 //
 //
-
-package main
+package muta
 
 import "errors"
 
