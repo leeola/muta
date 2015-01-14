@@ -12,14 +12,12 @@ import (
 	"os"
 
 	"github.com/leeola/goscriptify"
+	"github.com/leeola/muta"
 )
-
-// githash's value is filled in via -ldflags -X.
-var githash string = ""
 
 func main() {
 	if len(os.Args) > 1 && os.Args[1] == "--version" {
-		fmt.Println(fmt.Sprintf("Muta Bin: %s", githash))
+		fmt.Println(fmt.Sprintf("Muta %s (bin)", muta.VERSION))
 	}
 
 	// Proxy this bin input/output to the "muta" file

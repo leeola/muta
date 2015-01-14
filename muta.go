@@ -32,7 +32,9 @@ Options:
   -h --help     Show this screen.
   --version     Show version.`, sTasks)
 
-	docopt.Parse(usage, nil, true, "Muta 0.0.0", false)
+	docopt.Parse(
+		usage, nil, true, fmt.Sprintf("Muta %s (lib)", VERSION), false,
+	)
 }
 
 func Te() {
