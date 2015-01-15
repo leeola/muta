@@ -28,6 +28,20 @@ func TestTaskerTask(t *testing.T) {
 		err = ta.Task("a", []string{}, func() {})
 		So(err, ShouldNotBeNil)
 	})
+
+	Convey("Should allow zero dependencies", t, func() {
+		ta := NewTasker()
+		err := ta.Task("a", func() {})
+		So(err, ShouldBeNil)
+	})
+
+	Convey("Should allow many dependencies", t, func() {
+		ta := NewTasker()
+		err := ta.Task("a", "b", "c", func() {})
+		So(err, ShouldBeNil)
+		ds := ta.Tasks["a"].Dependencies
+		So(ds, ShouldResemble, []string{"b", "c"})
+	})
 }
 
 func TestTaskerRunTask(t *testing.T) {
