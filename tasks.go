@@ -3,7 +3,10 @@
 //
 package muta
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type TaskHandler func()
 
@@ -40,11 +43,16 @@ func (tr *Tasker) Task(n string, ds []string, h TaskHandler) error {
 	return nil
 }
 
-func (tr *Tasker) Run() {
+func (tr *Tasker) Run() error {
+	return tr.RunTask("default")
 }
 
 func (tr *Tasker) RunTask(tn string) error {
 	t := tr.Tasks[tn]
+	if t == nil {
+		return errors.New(fmt.Sprintf("Task \"%s\" does not exist.", tn))
+	}
+
 	if t.Dependencies != nil {
 		for _, d := range t.Dependencies {
 			tr.RunTask(d)

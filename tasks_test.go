@@ -42,6 +42,13 @@ func TestTaskerRunTask(t *testing.T) {
 		So(ran, ShouldBeTrue)
 	})
 
+	Convey("Should return an error for a non-existent task", t, func() {
+		ta := NewTasker()
+		ta.Task("a", nil, func() {})
+		err := ta.RunTask("b")
+		So(err, ShouldNotBeNil)
+	})
+
 	Convey("Should run task dependencies", t, func() {
 		deps := []string{"b", "c"}
 		called := []string{}
