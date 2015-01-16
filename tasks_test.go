@@ -42,6 +42,12 @@ func TestTaskerTask(t *testing.T) {
 		ds := ta.Tasks["a"].Dependencies
 		So(ds, ShouldResemble, []string{"b", "c"})
 	})
+
+	Convey("Should allow no functions", t, func() {
+		ta := NewTasker()
+		err := ta.Task("a")
+		So(err, ShouldBeNil)
+	})
 }
 
 func TestTaskerRunTask(t *testing.T) {
@@ -80,6 +86,18 @@ func TestTaskerRunTask(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(called, ShouldContain, "b")
 		So(called, ShouldContain, "c")
+	})
+
+	Convey("Should run dependencies even without a func", t, func() {
+		called := false
+		ta := NewTasker()
+		ta.Task("a", "b")
+		ta.Task("b", func() {
+			called = true
+		})
+		err := ta.RunTask("a")
+		So(err, ShouldBeNil)
+		So(called, ShouldBeTrue)
 	})
 
 	Convey("Should error on circular dependencies like", t, func() {

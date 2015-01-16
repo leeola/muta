@@ -86,7 +86,10 @@ func (tr *Tasker) RunTask(tn string) error {
 			tr.RunTask(d)
 		}
 	}
-	t.Handler()
+
+	if t.Handler != nil {
+		t.Handler()
+	}
 	return nil
 }
 
