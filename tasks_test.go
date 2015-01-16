@@ -48,6 +48,14 @@ func TestTaskerTask(t *testing.T) {
 		err := ta.Task("a")
 		So(err, ShouldBeNil)
 	})
+
+	Convey("Should concatenate dependency arrays", t, func() {
+		ta := NewTasker()
+		err := ta.Task("a", "b", []string{"c", "d"}, "e")
+		So(err, ShouldBeNil)
+		d := ta.Tasks["a"].Dependencies
+		So(d, ShouldResemble, []string{"b", "c", "d", "e"})
+	})
 }
 
 func TestTaskerRunTask(t *testing.T) {

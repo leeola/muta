@@ -37,11 +37,10 @@ func (tr *Tasker) Task(n string, args ...interface{}) error {
 	for _, arg := range args {
 		v := reflect.ValueOf(arg)
 		switch v.Type().String() {
-		case "[]string":
-			// old api "support", will be removed in next commit
-			ds = v.Interface().([]string)
 		case "string":
 			ds = append(ds, v.String())
+		case "[]string":
+			ds = append(ds, v.Interface().([]string)...)
 		case "func()":
 			h = v.Interface().(func())
 			// Break on the first func found
