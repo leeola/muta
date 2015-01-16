@@ -13,8 +13,8 @@ type TaskHandler func()
 
 var DefaultTasker *Tasker = NewTasker()
 
-func Task(name string, deps []string, h TaskHandler) error {
-	return DefaultTasker.Task(name, deps, h)
+func Task(name string, args ...interface{}) error {
+	return DefaultTasker.Task(name, args...)
 }
 
 func Run() {
