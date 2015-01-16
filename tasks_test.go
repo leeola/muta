@@ -54,7 +54,7 @@ func TestTaskerRunTask(t *testing.T) {
 	Convey("Should run a task", t, func() {
 		ran := false
 		ta := NewTasker()
-		ta.Task("a", nil, func() {
+		ta.Task("a", func() {
 			ran = true
 		})
 		err := ta.RunTask("a")
@@ -64,7 +64,7 @@ func TestTaskerRunTask(t *testing.T) {
 
 	Convey("Should return an error for a non-existent task", t, func() {
 		ta := NewTasker()
-		ta.Task("a", nil, func() {})
+		ta.Task("a", func() {})
 		err := ta.RunTask("b")
 		So(err, ShouldNotBeNil)
 	})
@@ -76,10 +76,10 @@ func TestTaskerRunTask(t *testing.T) {
 		ta.Task("a", deps, func() {
 			called = append(called, "a")
 		})
-		ta.Task("b", nil, func() {
+		ta.Task("b", func() {
 			called = append(called, "b")
 		})
-		ta.Task("c", nil, func() {
+		ta.Task("c", func() {
 			called = append(called, "c")
 		})
 		err := ta.RunTask("a")

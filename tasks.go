@@ -35,9 +35,6 @@ func (tr *Tasker) Task(n string, args ...interface{}) error {
 	ds := []string{}
 	var h TaskHandler
 	for _, arg := range args {
-		if arg == nil {
-			continue
-		}
 		v := reflect.ValueOf(arg)
 		switch v.Type().String() {
 		case "[]string":
