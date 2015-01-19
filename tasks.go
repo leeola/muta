@@ -9,7 +9,10 @@ import (
 	"reflect"
 )
 
-type TaskHandler func()
+type Handler func()
+type ErrorHandler func() error
+type ContextHandler func(Ctx *interface{}) error
+type StreamHandler func() (*Stream, error)
 
 var DefaultTasker *Tasker = NewTasker()
 
@@ -31,9 +34,29 @@ type Tasker struct {
 	Tasks map[string]*TaskerTask
 }
 
+type TaskerTask struct {
+	Name           string
+	Dependencies   []string
+	Handler        Handler
+	ErrorHandler   ErrorHandler
+	StreamHandler  StreamHandler
+	ContextHandler ContextHandler
+}
+
 func (tr *Tasker) Task(n string, args ...interface{}) error {
+	if tr.Tasks[n] != nil {
+		return errors.New("Task already exists")
+	}
+
 	ds := []string{}
-	var h TaskHandler
+
+	var (
+		h  Handler
+		er ErrorHandler
+		sh StreamHandler
+		ch ContextHandler
+	)
+
 	for _, arg := range args {
 		v := reflect.ValueOf(arg)
 		switch v.Type().String() {
@@ -43,7 +66,6 @@ func (tr *Tasker) Task(n string, args ...interface{}) error {
 			ds = append(ds, v.Interface().([]string)...)
 		case "func()":
 			h = v.Interface().(func())
-			// Break on the first func found
 			break
 		default:
 			return errors.New(fmt.Sprintf(
@@ -51,19 +73,16 @@ func (tr *Tasker) Task(n string, args ...interface{}) error {
 			))
 		}
 	}
-	return tr.TaskStrict(n, ds, h)
-}
-
-func (tr *Tasker) TaskStrict(n string, ds []string, h TaskHandler) error {
-	if tr.Tasks[n] != nil {
-		return errors.New("Task already exists")
-	}
 
 	tr.Tasks[n] = &TaskerTask{
-		Name:         n,
-		Dependencies: ds,
-		Handler:      h,
+		Name:           n,
+		Dependencies:   ds,
+		Handler:        h,
+		ErrorHandler:   er,
+		StreamHandler:  sh,
+		ContextHandler: ch,
 	}
+
 	return nil
 }
 
@@ -87,10 +106,4 @@ func (tr *Tasker) RunTask(tn string) error {
 		t.Handler()
 	}
 	return nil
-}
-
-type TaskerTask struct {
-	Name         string
-	Dependencies []string
-	Handler      TaskHandler
 }
