@@ -51,9 +51,8 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 				return
 			}
 
-			for true {
-				// Wait for a read request
-				<-read
+			// Wait for a read request
+			for <-read {
 
 				// Read
 				count, ferr := f.Read(pchunks)
