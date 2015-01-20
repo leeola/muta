@@ -9,17 +9,27 @@ func (s *Stream) Pipe(f Streamer) *Stream {
 	return s
 }
 
+func (s *Stream) pipeChunk(streamers []Streamer,
+	fi *FileInfo, chunk []byte) (err error) {
+	for _, fn := range streamers {
+		fi, chunk, err = fn(fi, chunk)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (s *Stream) Start() {
-	for _, f := range s.Streamers {
-		// Call the first Streamer with nil values. This signals it to
-		// start generating it's own files (if any).
-		f(nil, nil)
+	for i, fn := range s.Streamers {
+		fi, chunk, _ := fn(nil, nil)
 		// In the near future, we need to check for errors returned by
 		// the Streamer. Ignoring them for now.
+		s.pipeChunk(s.Streamers[i+1:], fi, chunk)
 	}
 }
 
 func Src(srcs ...string) *Stream {
 	s := &Stream{}
-	return s.Pipe(SrcStreamer(srcs...))
+	return s.Pipe(SrcStreamer(srcs, SrcOpts{}))
 }
