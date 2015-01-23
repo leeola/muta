@@ -67,6 +67,15 @@ func (tr *Tasker) Task(n string, args ...interface{}) error {
 		case "func()":
 			h = v.Interface().(func())
 			break
+		case "func() error":
+			er = v.Interface().(func() error)
+			break
+		case "func() (*muta.Stream, error)":
+			sh = v.Interface().(func() (*Stream, error))
+			break
+		case "func(*interface {}) error":
+			ch = v.Interface().(func(*interface{}) error)
+			break
 		default:
 			return errors.New(fmt.Sprintf(
 				"unsupported task argument type '%s'", v.Type().String(),
@@ -104,6 +113,18 @@ func (tr *Tasker) RunTask(tn string) error {
 
 	if t.Handler != nil {
 		t.Handler()
+	} else if t.ErrorHandler != nil {
+		return t.ErrorHandler()
+	} else if t.StreamHandler != nil {
+		s, err := t.StreamHandler()
+		if err != nil {
+			return err
+		}
+		if s != nil {
+			s.Start()
+		}
+	} else if t.ContextHandler != nil {
+		return errors.New("Not implemented")
 	}
 	return nil
 }

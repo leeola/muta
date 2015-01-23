@@ -14,11 +14,36 @@ func TestNewTasker(t *testing.T) {
 }
 
 func TestTaskerTask(t *testing.T) {
-	Convey("Should add a task", t, func() {
+	Convey("Should add a func() task", t, func() {
 		ta := NewTasker()
-		err := ta.Task("a", []string{}, func() {})
+		task := func() {}
+		err := ta.Task("a", task)
 		So(err, ShouldBeNil)
-		So(len(ta.Tasks), ShouldEqual, 1)
+		So(ta.Tasks["a"].Handler, ShouldEqual, task)
+	})
+
+	Convey("Should add a ErrorHandler task", t, func() {
+		ta := NewTasker()
+		task := func() error { return nil }
+		err := ta.Task("a", task)
+		So(err, ShouldBeNil)
+		So(ta.Tasks["a"].ErrorHandler, ShouldEqual, task)
+	})
+
+	Convey("Should add a StreamHandler task", t, func() {
+		ta := NewTasker()
+		task := func() (*Stream, error) { return nil, nil }
+		err := ta.Task("a", task)
+		So(err, ShouldBeNil)
+		So(ta.Tasks["a"].StreamHandler, ShouldEqual, task)
+	})
+
+	Convey("Should add a ContextHandler task", t, func() {
+		ta := NewTasker()
+		task := func(_ *interface{}) error { return nil }
+		err := ta.Task("a", task)
+		So(err, ShouldBeNil)
+		So(ta.Tasks["a"].ContextHandler, ShouldEqual, task)
 	})
 
 	Convey("Should not allow replacing tasks", t, func() {
