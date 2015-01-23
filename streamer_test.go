@@ -24,11 +24,11 @@ func TestSrcStreamer(t *testing.T) {
 
 	Convey("Should load the given file and", t, func() {
 		Convey("Populate FileInfo with the file info", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello.md"}, SrcOpts{})
+			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{})
 			fi, _, err := s(nil, nil)
 			So(err, ShouldBeNil)
 			So(fi, ShouldResemble, &FileInfo{
-				Name: "hello.md",
+				Name: "hello",
 				Path: "_test/fixtures",
 			})
 			// flush for defer file close
@@ -36,7 +36,7 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Return chunks of the file", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello.md"}, SrcOpts{
+			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
 				ReadSize: 5,
 			})
 			_, b, err := s(nil, nil)
@@ -47,7 +47,7 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Return multiple chunks of the file", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello.md"}, SrcOpts{
+			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
 				ReadSize: 3,
 			})
 			_, b, err := s(nil, nil)
@@ -61,20 +61,20 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Return a valid FileInfo at EOF", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello.md"}, SrcOpts{
+			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
 				ReadSize: 5,
 			})
 			s(nil, nil)
 			fi, _, err := s(nil, nil)
 			So(err, ShouldBeNil)
 			So(fi, ShouldResemble, &FileInfo{
-				Name: "hello.md",
+				Name: "hello",
 				Path: "_test/fixtures",
 			})
 		})
 
 		Convey("Return a nil chunk at EOF", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello.md"}, SrcOpts{
+			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
 				ReadSize: 5,
 			})
 			s(nil, nil)
@@ -84,7 +84,7 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Trim byte array to length of data", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello.md"}, SrcOpts{
+			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
 				ReadSize: 4,
 			})
 			_, b, _ := s(nil, nil)
