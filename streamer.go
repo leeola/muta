@@ -55,7 +55,7 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 	// Also, moving it out would let us ensure closing of the files
 	// in tests
 	go func() {
-		loadFile := func(p string) {
+		loadFile := func(p string) error {
 			pchunks := make([]byte, opts.ReadSize)
 			pfi := &FileInfo{
 				Name: filepath.Base(p),
@@ -68,12 +68,11 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 				fi <- pfi
 				chunk <- nil
 				err <- ferr
-				return
+				return ferr
 			}
 
 			// Wait for a read request
 			for <-read {
-
 				// Read
 				count, ferr := f.Read(pchunks)
 				if ferr != nil && ferr == io.EOF {
@@ -85,18 +84,29 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 				chunk <- pchunks[0:count]
 				err <- ferr
 				if ferr != nil {
-					return
+					return ferr
 				}
 			}
 
+			// The for loop stopped, send EOF
 			fi <- pfi
 			chunk <- nil
 			err <- nil
+			return nil
 		}
 
 		for _, p := range ps {
-			loadFile(p)
+			err := loadFile(p)
+			if err != nil {
+				return
+			}
 		}
+
+		<-read
+		// send EOS
+		fi <- nil
+		chunk <- nil
+		err <- nil
 	}()
 
 	return func(inFi *FileInfo, inC []byte) (*FileInfo, []byte, error) {
