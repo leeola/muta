@@ -9,7 +9,7 @@ import (
 )
 
 func TestSrcStreamer(t *testing.T) {
-	Convey("Should not modify incoming chunks", t, func() {
+	Convey("Should pipe incoming chunks", t, func() {
 		s := SrcStreamer([]string{}, SrcOpts{})
 		fi := &FileInfo{}
 		b := []byte("chunk")
