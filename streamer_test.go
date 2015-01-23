@@ -95,6 +95,44 @@ func TestSrcStreamer(t *testing.T) {
 			s(nil, nil)
 		})
 	})
+
+	Convey("Should stream any number of files", t, func() {
+		s := SrcStreamer([]string{
+			"_test/fixtures/hello",
+			"_test/fixtures/world",
+		}, SrcOpts{})
+		fi, chunk, err := s(nil, nil)
+		So(err, ShouldBeNil)
+		So(fi, ShouldResemble, &FileInfo{
+			Name: "hello",
+			Path: "_test/fixtures",
+		})
+		So(chunk, ShouldResemble, []byte("hello"))
+		fi, chunk, err = s(nil, nil)
+		So(err, ShouldBeNil)
+		So(fi, ShouldResemble, &FileInfo{
+			Name: "hello",
+			Path: "_test/fixtures",
+		})
+		So(chunk, ShouldBeNil) // EOF
+		fi, chunk, err = s(nil, nil)
+		So(err, ShouldBeNil)
+		So(fi, ShouldResemble, &FileInfo{
+			Name: "world",
+			Path: "_test/fixtures",
+		})
+		So(chunk, ShouldResemble, []byte("world"))
+		fi, chunk, err = s(nil, nil)
+		So(err, ShouldBeNil)
+		So(fi, ShouldResemble, &FileInfo{
+			Name: "world",
+			Path: "_test/fixtures",
+		})
+		So(chunk, ShouldBeNil) // EOF
+		fi, chunk, err = s(nil, nil)
+		So(err, ShouldBeNil)
+		So(fi, ShouldBeNil) // EOS
+	})
 }
 
 func TestDest(t *testing.T) {
