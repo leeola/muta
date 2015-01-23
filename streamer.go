@@ -6,6 +6,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 type FileInfo struct {
@@ -55,6 +56,13 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 	// Also, moving it out would let us ensure closing of the files
 	// in tests
 	go func() {
+		sendErr := func(_fi *FileInfo, _chunk []byte, _err error) {
+			<-read
+			fi <- _fi
+			chunk <- _chunk
+			err <- _err
+		}
+
 		loadFile := func(p string) error {
 			pchunks := make([]byte, opts.ReadSize)
 			pfi := &FileInfo{
@@ -65,9 +73,7 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 			f, ferr := os.Open(p)
 			defer f.Close()
 			if ferr != nil {
-				fi <- pfi
-				chunk <- nil
-				err <- ferr
+				sendErr(pfi, nil, ferr)
 				return ferr
 			}
 
@@ -95,7 +101,23 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 			return nil
 		}
 
+		// Go through the paths and globbify any globbed paths
+		globbedPaths := []string{}
 		for _, p := range ps {
+			// If it hs a *, it is a glob
+			if strings.Contains(p, "*") {
+				expandedGlobs, err := filepath.Glob(p)
+				if err != nil {
+					sendErr(nil, nil, err)
+					return
+				}
+				globbedPaths = append(globbedPaths, expandedGlobs...)
+			} else {
+				globbedPaths = append(globbedPaths, p)
+			}
+		}
+
+		for _, p := range globbedPaths {
 			err := loadFile(p)
 			if err != nil {
 				return

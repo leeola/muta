@@ -20,7 +20,11 @@ func TestSrcStreamer(t *testing.T) {
 		s(fi, b)
 	})
 
-	Convey("Should support globbing", t, nil)
+	Convey("Should return an error if the file cannot be found", t, func() {
+		s := SrcStreamer([]string{"_test/fixtures/404"}, SrcOpts{})
+		_, _, err := s(nil, nil)
+		So(err, ShouldNotBeNil)
+	})
 
 	Convey("Should load the given file and", t, func() {
 		Convey("Populate FileInfo with the file info", func() {
@@ -132,6 +136,25 @@ func TestSrcStreamer(t *testing.T) {
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi, ShouldBeNil) // EOS
+	})
+
+	Convey("Should support globbing", t, func() {
+		s := SrcStreamer([]string{"_test/fixtures/*.md"}, SrcOpts{})
+		files := []string{}
+		var err error
+		for true {
+			fi, chunk, serr := s(nil, nil)
+			err = serr
+			if err != nil || fi == nil {
+				break
+			}
+			if chunk == nil {
+				// Only add the file when the Streamer signals EOF
+				files = append(files, fi.Name)
+			}
+		}
+		So(err, ShouldBeNil)
+		So(files, ShouldResemble, []string{"hello.md", "world.md"})
 	})
 }
 
