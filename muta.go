@@ -87,3 +87,8 @@ func Te() {
 		os.Exit(1)
 	}
 }
+
+// An alias for Te()
+func Start() {
+	Te()
+}
