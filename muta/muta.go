@@ -3,7 +3,7 @@
 //
 // The muta bin is the main bin called by users. It is responsible for
 // finding and running the specified `muta.go` file in the current/target
-// directory.
+// directory. Though that logic is actually handled by GoScriptify.
 //
 package main
 
@@ -22,5 +22,5 @@ func main() {
 
 	// Proxy this bin input/output to the "muta" file
 	// in the current directory
-	goscriptify.RunScript("muta")
+	goscriptify.RunOneScript("muta", "Muta", "muta.go")
 }
