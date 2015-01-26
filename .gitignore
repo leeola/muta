@@ -1,4 +1,4 @@
 /.agignore
 /.godeps
 /_test/tmp
-/example
+/_examples/markdown/build
