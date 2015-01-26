@@ -7,6 +7,16 @@ import (
 	. "github.com/smartystreets/goconvey/convey"
 )
 
+// A little utility func
+func ContainsStringCount(sl []string, s string) (c int) {
+	for _, item := range sl {
+		if item == s {
+			c++
+		}
+	}
+	return c
+}
+
 func TestStreamPipe(t *testing.T) {
 	Convey("Should add the Streamer to the Streamers", t, func() {
 		s := Stream{}
@@ -118,6 +128,122 @@ func TestStreamstartGenerator(t *testing.T) {
 		s.startGenerator(a, []Streamer{b, c})
 		So(calls, ShouldResemble, []string{"a", "b", "c", "a"})
 		So(chunks, ShouldResemble, [][]byte{nil, nil})
+	})
+
+	Convey("When a Streamer signals EOS but not EOF,", t, func() {
+		Convey("Repeat the stream until they signal EOF", func() {
+			calls := []string{}
+			originalFi := &FileInfo{Name: "foo"}
+			gen := func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "gen")
+				switch ContainsStringCount(calls, "gen") {
+				case 1:
+					return originalFi, nil, nil
+				default:
+					return nil, nil, nil
+				}
+			}
+			a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "a")
+				if len(calls) <= 3 {
+					// By returning EOS but not EOF, we cause the stream to
+					// repeat. It stops here for now, but it repeats the last
+					// generator return until this func returns a nil byte
+					return nil, []byte{}, nil
+				} else {
+					return fi, chunk, nil
+				}
+			}
+			b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "b")
+				return fi, chunk, nil
+			}
+			s := Stream{}
+			s.startGenerator(gen, []Streamer{a, b})
+			So(calls, ShouldResemble, []string{
+				"gen", "a", "a", "a", "b", "gen"})
+		})
+
+		Convey("Do not repeat the Stream if the Generator did not "+
+			"return EOF", func() {
+			calls := []string{}
+			originalFi := &FileInfo{Name: "foo"}
+			gen := func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "gen")
+				switch ContainsStringCount(calls, "gen") {
+				case 1:
+					return originalFi, []byte("foo"), nil
+				case 2:
+					return originalFi, nil, nil
+				default:
+					return nil, nil, nil
+				}
+			}
+			a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "a")
+				if ContainsStringCount(calls, "a") == 1 {
+					// This normally signals stream repeat, but it should not
+					// repeat here because the Generator did not signal EOS
+					// EOF
+					return nil, []byte{}, nil
+				} else {
+					return fi, chunk, nil
+				}
+			}
+			b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "b")
+				return fi, chunk, nil
+			}
+			s := Stream{}
+			s.startGenerator(gen, []Streamer{a, b})
+			So(calls, ShouldResemble, []string{
+				"gen", "a", // "a" signals EOS (with a repeat []byte)
+				"gen", "a", "b", "gen"})
+		})
+	})
+
+	Convey("When a Generator signals EOS and EOF", t, func() {
+		Convey("Repeat the Stream if any Receiver returns bytes", func() {
+			calls := []string{}
+			data := []byte{}
+			originalFi := &FileInfo{Name: "foo"}
+			gen := func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "gen")
+				if ContainsStringCount(calls, "gen") == 1 {
+					return originalFi, nil, nil
+				} else {
+					return nil, nil, nil
+				}
+			}
+			a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "a")
+				return fi, chunk, nil
+			}
+			b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "b")
+				if ContainsStringCount(calls, "b") <= 2 {
+					return fi, []byte("foo"), nil
+				} else {
+					return fi, chunk, nil
+				}
+			}
+			c := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+				calls = append(calls, "c")
+				if chunk != nil {
+					data = append(data, chunk...)
+				}
+				return nil, nil, nil
+			}
+			s := Stream{}
+			s.startGenerator(gen, []Streamer{a, b, c})
+			So(data, ShouldResemble, []byte("foofoo"))
+			So(calls, ShouldResemble, []string{
+				"gen", "a", "b", "c", // b returned data
+				"a", "b", "c", // b returned data
+				"a", "b", "c", // b returned EOF
+				"gen", // gen returned EOS
+			})
+		})
 	})
 }
 

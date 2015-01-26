@@ -22,7 +22,7 @@ func (s *Stream) Start() {
 func (s *Stream) startGenerator(generator Streamer,
 	receivers []Streamer) (err error) {
 	for true {
-		genFi, chunk, err := generator(nil, nil)
+		genFi, genChunk, err := generator(nil, nil)
 		if err != nil {
 			return err
 		}
@@ -32,16 +32,56 @@ func (s *Stream) startGenerator(generator Streamer,
 			return nil
 		}
 
-		fi := genFi
-		for _, fn := range receivers {
+		var fi *FileInfo
+		var chunk []byte
+		var streamed bool
+
+		var fn Streamer
+		for i := 0; i < len(receivers); i++ {
+			if i == 0 {
+				fi = genFi
+				chunk = genChunk
+				streamed = false
+			}
+
+			fn = receivers[i]
 			fi, chunk, err = fn(fi, chunk)
 			if err != nil {
 				return err
 			}
 
-			// A receiver is signaling EOS, so stop the fi/chunk propagation
+			// If any receiver streamed data, set streamed = true
+			if chunk != nil {
+				streamed = true
+			}
+
+			// Receiver signaled EOS
 			if fi == nil {
-				break
+				if streamed && genChunk == nil {
+					// If any Receiver returned any data, we need to repeat
+					// the stream until they all (up until EOS atleast) return
+					// EOF
+					// Repeat the stream
+					i = -1
+					continue
+				} else if chunk == nil || genChunk != nil {
+					// chunk == nil:
+					// Receiver signaled EOS and EOF
+					//
+					// genChunk != nil
+					// Receiver signaled EOS but not EOF, **and** the Generator
+					// is not signaling EOF (ie, it's still streaming) data.
+					// Repeating here would be bad, since it would repeat
+					// the generator data.
+					//
+					// Stop the stream
+					break
+				} else {
+					// Receiver signaled EOS and but not EOF
+					// Repeat the stream
+					i = -1
+					continue
+				}
 			}
 
 			// For now, if the receiver returns a different file than the
