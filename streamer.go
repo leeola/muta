@@ -12,7 +12,7 @@ import (
 type FileInfo struct {
 	Name string
 	Path string
-	Ctx  *interface{}
+	Ctx  map[string]interface{}
 }
 
 type SrcOpts struct {
