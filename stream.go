@@ -19,6 +19,8 @@ func (s *Stream) Start() {
 	}
 }
 
+// TODO: Split this function into smaller logical sections, for ease
+// of debugging
 func (s *Stream) startGenerator(generator Streamer,
 	receivers []Streamer) (err error) {
 	for true {
