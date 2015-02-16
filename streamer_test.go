@@ -34,6 +34,7 @@ func TestSrcStreamer(t *testing.T) {
 			So(fi, ShouldResemble, &FileInfo{
 				Name: "hello",
 				Path: "_test/fixtures",
+				Ctx:  map[string]interface{}{},
 			})
 			// flush for defer file close
 			s(nil, nil)
@@ -74,6 +75,7 @@ func TestSrcStreamer(t *testing.T) {
 			So(fi, ShouldResemble, &FileInfo{
 				Name: "hello",
 				Path: "_test/fixtures",
+				Ctx:  map[string]interface{}{},
 			})
 		})
 
@@ -110,6 +112,7 @@ func TestSrcStreamer(t *testing.T) {
 		So(fi, ShouldResemble, &FileInfo{
 			Name: "hello",
 			Path: "_test/fixtures",
+			Ctx:  map[string]interface{}{},
 		})
 		So(chunk, ShouldResemble, []byte("hello"))
 		fi, chunk, err = s(nil, nil)
@@ -117,6 +120,7 @@ func TestSrcStreamer(t *testing.T) {
 		So(fi, ShouldResemble, &FileInfo{
 			Name: "hello",
 			Path: "_test/fixtures",
+			Ctx:  map[string]interface{}{},
 		})
 		So(chunk, ShouldBeNil) // EOF
 		fi, chunk, err = s(nil, nil)
@@ -124,6 +128,7 @@ func TestSrcStreamer(t *testing.T) {
 		So(fi, ShouldResemble, &FileInfo{
 			Name: "world",
 			Path: "_test/fixtures",
+			Ctx:  map[string]interface{}{},
 		})
 		So(chunk, ShouldResemble, []byte("world"))
 		fi, chunk, err = s(nil, nil)
@@ -131,6 +136,7 @@ func TestSrcStreamer(t *testing.T) {
 		So(fi, ShouldResemble, &FileInfo{
 			Name: "world",
 			Path: "_test/fixtures",
+			Ctx:  map[string]interface{}{},
 		})
 		So(chunk, ShouldBeNil) // EOF
 		fi, chunk, err = s(nil, nil)
@@ -155,6 +161,13 @@ func TestSrcStreamer(t *testing.T) {
 		}
 		So(err, ShouldBeNil)
 		So(files, ShouldResemble, []string{"hello.md", "world.md"})
+	})
+
+	Convey("Should instantiate the Ctx map", t, func() {
+		s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{})
+		fi, _, err := s(nil, nil)
+		So(err, ShouldBeNil)
+		So(fi.Ctx, ShouldNotBeNil)
 	})
 }
 

@@ -9,6 +9,14 @@ import (
 	"strings"
 )
 
+func NewFileInfo(p string) *FileInfo {
+	return &FileInfo{
+		Name: filepath.Base(p),
+		Path: filepath.Dir(p),
+		Ctx:  make(map[string]interface{}),
+	}
+}
+
 type FileInfo struct {
 	Name string
 	Path string
@@ -65,10 +73,7 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 
 		loadFile := func(p string) error {
 			pchunks := make([]byte, opts.ReadSize)
-			pfi := &FileInfo{
-				Name: filepath.Base(p),
-				Path: filepath.Dir(p),
-			}
+			pfi := NewFileInfo(p)
 
 			f, ferr := os.Open(p)
 			defer f.Close()
