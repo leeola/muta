@@ -10,17 +10,23 @@ import (
 )
 
 func NewFileInfo(p string) *FileInfo {
+	n := filepath.Base(p)
+	d := filepath.Dir(p)
 	return &FileInfo{
-		Name: filepath.Base(p),
-		Path: filepath.Dir(p),
-		Ctx:  make(map[string]interface{}),
+		Name:         n,
+		Path:         d,
+		OriginalName: n,
+		OriginalPath: d,
+		Ctx:          make(map[string]interface{}),
 	}
 }
 
 type FileInfo struct {
-	Name string
-	Path string
-	Ctx  map[string]interface{}
+	Name         string
+	Path         string
+	OriginalName string
+	OriginalPath string
+	Ctx          map[string]interface{}
 }
 
 type SrcOpts struct {

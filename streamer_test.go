@@ -32,9 +32,11 @@ func TestSrcStreamer(t *testing.T) {
 			fi, _, err := s(nil, nil)
 			So(err, ShouldBeNil)
 			So(fi, ShouldResemble, &FileInfo{
-				Name: "hello",
-				Path: "_test/fixtures",
-				Ctx:  map[string]interface{}{},
+				Name:         "hello",
+				Path:         "_test/fixtures",
+				OriginalName: "hello",
+				OriginalPath: "_test/fixtures",
+				Ctx:          map[string]interface{}{},
 			})
 			// flush for defer file close
 			s(nil, nil)
@@ -73,9 +75,11 @@ func TestSrcStreamer(t *testing.T) {
 			fi, _, err := s(nil, nil)
 			So(err, ShouldBeNil)
 			So(fi, ShouldResemble, &FileInfo{
-				Name: "hello",
-				Path: "_test/fixtures",
-				Ctx:  map[string]interface{}{},
+				Name:         "hello",
+				Path:         "_test/fixtures",
+				OriginalName: "hello",
+				OriginalPath: "_test/fixtures",
+				Ctx:          map[string]interface{}{},
 			})
 		})
 
@@ -110,33 +114,41 @@ func TestSrcStreamer(t *testing.T) {
 		fi, chunk, err := s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi, ShouldResemble, &FileInfo{
-			Name: "hello",
-			Path: "_test/fixtures",
-			Ctx:  map[string]interface{}{},
+			Name:         "hello",
+			Path:         "_test/fixtures",
+			OriginalName: "hello",
+			OriginalPath: "_test/fixtures",
+			Ctx:          map[string]interface{}{},
 		})
 		So(chunk, ShouldResemble, []byte("hello"))
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi, ShouldResemble, &FileInfo{
-			Name: "hello",
-			Path: "_test/fixtures",
-			Ctx:  map[string]interface{}{},
+			Name:         "hello",
+			Path:         "_test/fixtures",
+			OriginalName: "hello",
+			OriginalPath: "_test/fixtures",
+			Ctx:          map[string]interface{}{},
 		})
 		So(chunk, ShouldBeNil) // EOF
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi, ShouldResemble, &FileInfo{
-			Name: "world",
-			Path: "_test/fixtures",
-			Ctx:  map[string]interface{}{},
+			Name:         "world",
+			Path:         "_test/fixtures",
+			OriginalName: "world",
+			OriginalPath: "_test/fixtures",
+			Ctx:          map[string]interface{}{},
 		})
 		So(chunk, ShouldResemble, []byte("world"))
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi, ShouldResemble, &FileInfo{
-			Name: "world",
-			Path: "_test/fixtures",
-			Ctx:  map[string]interface{}{},
+			Name:         "world",
+			Path:         "_test/fixtures",
+			OriginalName: "world",
+			OriginalPath: "_test/fixtures",
+			Ctx:          map[string]interface{}{},
 		})
 		So(chunk, ShouldBeNil) // EOF
 		fi, chunk, err = s(nil, nil)
