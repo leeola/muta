@@ -97,8 +97,3 @@ func (s *Stream) startGenerator(generator Streamer,
 	}
 	return nil
 }
-
-func Src(srcs ...string) *Stream {
-	s := &Stream{}
-	return s.Pipe(SrcStreamer(srcs, SrcOpts{}))
-}
