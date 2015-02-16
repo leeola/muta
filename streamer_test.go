@@ -111,46 +111,40 @@ func TestSrcStreamer(t *testing.T) {
 			"_test/fixtures/hello",
 			"_test/fixtures/world",
 		}, SrcOpts{})
+		helloFi := &FileInfo{
+			Name:         "hello",
+			Path:         "_test/fixtures",
+			OriginalName: "hello",
+			OriginalPath: "_test/fixtures",
+			Ctx:          map[string]interface{}{},
+		}
+		worldFi := &FileInfo{
+			Name:         "world",
+			Path:         "_test/fixtures",
+			OriginalName: "world",
+			OriginalPath: "_test/fixtures",
+			Ctx:          map[string]interface{}{},
+		}
 		fi, chunk, err := s(nil, nil)
 		So(err, ShouldBeNil)
-		So(fi, ShouldResemble, &FileInfo{
-			Name:         "hello",
-			Path:         "_test/fixtures",
-			OriginalName: "hello",
-			OriginalPath: "_test/fixtures",
-			Ctx:          map[string]interface{}{},
-		})
+		So(fi, ShouldResemble, helloFi)
 		So(chunk, ShouldResemble, []byte("hello"))
+
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
-		So(fi, ShouldResemble, &FileInfo{
-			Name:         "hello",
-			Path:         "_test/fixtures",
-			OriginalName: "hello",
-			OriginalPath: "_test/fixtures",
-			Ctx:          map[string]interface{}{},
-		})
+		So(fi, ShouldResemble, helloFi)
 		So(chunk, ShouldBeNil) // EOF
+
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
-		So(fi, ShouldResemble, &FileInfo{
-			Name:         "world",
-			Path:         "_test/fixtures",
-			OriginalName: "world",
-			OriginalPath: "_test/fixtures",
-			Ctx:          map[string]interface{}{},
-		})
+		So(fi, ShouldResemble, worldFi)
 		So(chunk, ShouldResemble, []byte("world"))
+
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
-		So(fi, ShouldResemble, &FileInfo{
-			Name:         "world",
-			Path:         "_test/fixtures",
-			OriginalName: "world",
-			OriginalPath: "_test/fixtures",
-			Ctx:          map[string]interface{}{},
-		})
+		So(fi, ShouldResemble, worldFi)
 		So(chunk, ShouldBeNil) // EOF
+
 		fi, chunk, err = s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi, ShouldBeNil) // EOS
