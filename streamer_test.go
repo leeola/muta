@@ -252,4 +252,7 @@ func TestDest(t *testing.T) {
 	})
 
 	Convey("Should not allow writing outside of the destination", t, nil)
+
+	Convey("Should write to the given file even if the filename "+
+		"changes after opening the writer", t, nil)
 }
