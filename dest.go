@@ -55,24 +55,26 @@ func Dest(d string, args ...interface{}) Streamer {
 			return nil, chunk, nil
 		}
 
-		destPath := filepath.Join(d, fi.Path)
-		destFilepath := filepath.Join(destPath, fi.Name)
-		// MkdirAll checks if the given path is a dir, and exists. So
-		// i believe there is no reason for us to bother checking.
-		err := os.MkdirAll(destPath, 0755)
-		if err != nil {
-			return fi, chunk, err
-		}
-
 		if chunk == nil && f != nil {
 			// f is open for writing, but chunk is nil, we're at EOF.
 			// Close f, and set it to nil
-			err = f.Close()
+			err := f.Close()
 			f = nil
 			return nil, nil, err
 		}
 
+		destPath := filepath.Join(d, fi.Path)
+		destFilepath := filepath.Join(destPath, fi.Name)
+
+		// If f is nil, we're at a new file
 		if f == nil {
+			// MkdirAll checks if the given path is a dir, and exists. So
+			// i believe there is no reason for us to bother checking.
+			err := os.MkdirAll(destPath, 0755)
+			if err != nil {
+				return fi, chunk, err
+			}
+
 			osFi, err := os.Stat(destFilepath)
 			if err == nil && osFi.IsDir() {
 				return fi, chunk, errors.New(fmt.Sprintf(
@@ -131,7 +133,7 @@ func Dest(d string, args ...interface{}) Streamer {
 
 		// lenth written can be ignored, because Write() returns an error
 		// if len(chunk) != n
-		_, err = f.Write(chunk)
+		_, err := f.Write(chunk)
 
 		// Return EOS always. Dest() writes everything, like a boss..?
 		return nil, nil, err
