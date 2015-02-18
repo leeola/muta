@@ -80,12 +80,6 @@ func Dest(d string, args ...interface{}) Streamer {
 			}
 
 			osFi, err := os.Stat(destFilepath)
-			if err == nil && osFi.IsDir() {
-				return fi, chunk, errors.New(fmt.Sprintf(
-					"Cannot write to '%s', path is directory.",
-					destFilepath,
-				))
-			}
 
 			// This area is a bit of a cluster f*ck. In short:
 			//
