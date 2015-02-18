@@ -48,22 +48,18 @@ func Dest(d string, args ...interface{}) Streamer {
 	var f *os.File
 	return func(fi *FileInfo, chunk []byte) (*FileInfo,
 		[]byte, error) {
-
 		// If fi is nil, then this func is now the generator. Dest() has no
 		// need to generate, so signal EOS
-		if fi == nil {
-			return nil, chunk, nil
-		}
-
 		// If chunk is nil, we're at EOF
-		if chunk == nil {
+		// In both cases, Close the file if it is open.
+		if fi == nil || chunk == nil {
 			var err error
 			// Close f, and set it to nil if needed
 			if f != nil {
 				err = f.Close()
 				f = nil
 			}
-			return nil, nil, err
+			return fi, chunk, err
 		}
 
 		destPath := filepath.Join(d, fi.Path)

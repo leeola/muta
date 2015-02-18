@@ -1,6 +1,7 @@
 package muta
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
@@ -130,5 +131,35 @@ func TestDest(t *testing.T) {
 		b, err = ioutil.ReadFile(filepath.Join(tmpDir, "different_file"))
 		So(err, ShouldNotBeNil)
 		So(b, ShouldBeNil)
+	})
+
+	os.Remove(filepath.Join(tmpDir, "file0"))
+	os.Remove(filepath.Join(tmpDir, "file1"))
+
+	Convey("Should write all incoming files", t, func() {
+		s := Dest(tmpDir)
+		fs := []*FileInfo{
+			NewFileInfo("file0"),
+			NewFileInfo("file1"),
+		}
+
+		for i, f := range fs {
+			_, _, err := s(f, []byte(fmt.Sprintf("foo%d", i)))
+			So(err, ShouldBeNil)
+			_, _, err = s(f, []byte(fmt.Sprintf("bar%d", i)))
+			So(err, ShouldBeNil)
+			_, _, err = s(f, nil)
+			So(err, ShouldBeNil)
+		}
+		_, _, err := s(nil, nil)
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file0"))
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, "foo0bar0")
+
+		b, err = ioutil.ReadFile(filepath.Join(tmpDir, "file1"))
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, "foo1bar1")
 	})
 }
