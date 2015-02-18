@@ -63,9 +63,9 @@ func TestDest(t *testing.T) {
 		So(err, ShouldBeNil)
 	})
 
-	os.Remove("_test/tmp/file")
+	os.Remove(filepath.Join(tmpDir, "file"))
 
-	Convey("Should write incoming bytes to the given file", t, func() {
+	Convey("Should write incoming bytes to a new file", t, func() {
 		s := Dest("_test/tmp")
 		f := &FileInfo{
 			Name: "file",
@@ -85,6 +85,28 @@ func TestDest(t *testing.T) {
 		So(b, ShouldResemble, []byte("foobarbaz"))
 	})
 
+	// Just to be safe, remove it and write new contents
+	os.Remove(filepath.Join(tmpDir, "file"))
+	ioutil.WriteFile(filepath.Join(tmpDir, "file"),
+		[]byte("REPLACE ME"), 0777)
+
+	Convey("Should write incoming bytes and replace an "+
+		"existing file", t, func() {
+		s := Dest(tmpDir)
+		f := NewFileInfo("file")
+
+		_, _, err := s(f, []byte("foo"))
+		So(err, ShouldBeNil)
+		_, _, err = s(f, []byte("bar"))
+		So(err, ShouldBeNil)
+		_, _, err = s(nil, nil)
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, "foobar")
+	})
+
 	Convey("Should not allow writing outside of the destination", t, nil)
 
 	os.Remove(filepath.Join(tmpDir, "file"))
@@ -93,7 +115,7 @@ func TestDest(t *testing.T) {
 	Convey("Should write to the given file even if the filename "+
 		"changes after opening the writer", t, func() {
 		s := Dest(tmpDir)
-		f := NewFileInfo("./file")
+		f := NewFileInfo("file")
 		_, _, err := s(f, []byte("foo"))
 		So(err, ShouldBeNil)
 		f.Name = "different_file"
@@ -104,7 +126,7 @@ func TestDest(t *testing.T) {
 
 		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
 		So(err, ShouldBeNil)
-		So(b, ShouldResemble, []byte("foobar"))
+		So(string(b), ShouldResemble, "foobar")
 		b, err = ioutil.ReadFile(filepath.Join(tmpDir, "different_file"))
 		So(err, ShouldNotBeNil)
 		So(b, ShouldBeNil)

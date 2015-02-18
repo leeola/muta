@@ -71,8 +71,9 @@ func Dest(d string, args ...interface{}) Streamer {
 
 		// If f is nil, we're at a new file
 		if f == nil {
-			// MkdirAll checks if the given path is a dir, and exists. So
-			// i believe there is no reason for us to bother checking.
+			// MkdirAll checks if the given path is a dir, and exists. If
+			// it does not exist, it creates it. So i believe there is no
+			// reason for us to bother checking.
 			err := os.MkdirAll(destPath, 0755)
 			if err != nil {
 				return fi, chunk, err
@@ -125,7 +126,7 @@ func Dest(d string, args ...interface{}) Streamer {
 						destFilepath,
 					))
 				} else {
-					f, err = os.Open(destFilepath)
+					f, err = os.Create(destFilepath)
 					if err != nil {
 						// Failed to open file for writing.
 						return fi, chunk, err
