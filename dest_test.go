@@ -3,12 +3,15 @@ package muta
 import (
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"testing"
 
 	. "github.com/smartystreets/goconvey/convey"
 )
 
 func TestDest(t *testing.T) {
+	tmpDir := filepath.Join("_test", "tmp")
+
 	os.RemoveAll("_test/tmp/dest")
 
 	Convey("Should create the the destination if needed", t, func() {
@@ -84,6 +87,26 @@ func TestDest(t *testing.T) {
 
 	Convey("Should not allow writing outside of the destination", t, nil)
 
+	os.Remove(filepath.Join(tmpDir, "file"))
+	os.Remove(filepath.Join(tmpDir, "different_file"))
+
 	Convey("Should write to the given file even if the filename "+
-		"changes after opening the writer", t, nil)
+		"changes after opening the writer", t, func() {
+		s := Dest(tmpDir)
+		f := NewFileInfo("./file")
+		_, _, err := s(f, []byte("foo"))
+		So(err, ShouldBeNil)
+		f.Name = "different_file"
+		_, _, err = s(f, []byte("bar"))
+		So(err, ShouldBeNil)
+		_, _, err = s(nil, nil)
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
+		So(err, ShouldBeNil)
+		So(b, ShouldResemble, []byte("foobar"))
+		b, err = ioutil.ReadFile(filepath.Join(tmpDir, "different_file"))
+		So(err, ShouldNotBeNil)
+		So(b, ShouldBeNil)
+	})
 }
