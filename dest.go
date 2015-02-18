@@ -55,11 +55,14 @@ func Dest(d string, args ...interface{}) Streamer {
 			return nil, chunk, nil
 		}
 
-		if chunk == nil && f != nil {
-			// f is open for writing, but chunk is nil, we're at EOF.
-			// Close f, and set it to nil
-			err := f.Close()
-			f = nil
+		// If chunk is nil, we're at EOF
+		if chunk == nil {
+			var err error
+			// Close f, and set it to nil if needed
+			if f != nil {
+				err = f.Close()
+				f = nil
+			}
 			return nil, nil, err
 		}
 
