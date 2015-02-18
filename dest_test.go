@@ -23,7 +23,7 @@ func TestDest(t *testing.T) {
 		}
 		c := []byte("chunk")
 		s(f, c)
-		s(nil, nil)
+		s(f, nil)
 		osFi, err := os.Stat("_test/tmp/dest")
 		So(err, ShouldBeNil)
 		So(osFi.IsDir(), ShouldBeTrue)
@@ -57,7 +57,7 @@ func TestDest(t *testing.T) {
 		_, _, err := s(f, c)
 		So(err, ShouldBeNil)
 		// Signal EOF
-		_, _, err = s(nil, nil)
+		_, _, err = s(f, nil)
 		So(err, ShouldBeNil)
 		// Test the file
 		_, err = os.Stat("_test/tmp/file")
@@ -78,7 +78,7 @@ func TestDest(t *testing.T) {
 		So(err, ShouldBeNil)
 		_, _, err = s(f, []byte("baz"))
 		So(err, ShouldBeNil)
-		_, _, err = s(nil, nil)
+		_, _, err = s(f, nil)
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadFile("_test/tmp/file")
@@ -100,7 +100,7 @@ func TestDest(t *testing.T) {
 		So(err, ShouldBeNil)
 		_, _, err = s(f, []byte("bar"))
 		So(err, ShouldBeNil)
-		_, _, err = s(nil, nil)
+		_, _, err = s(f, nil)
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
@@ -122,7 +122,7 @@ func TestDest(t *testing.T) {
 		f.Name = "different_file"
 		_, _, err = s(f, []byte("bar"))
 		So(err, ShouldBeNil)
-		_, _, err = s(nil, nil)
+		_, _, err = s(f, nil)
 		So(err, ShouldBeNil)
 
 		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
