@@ -22,11 +22,6 @@ func (s *Stream) Start() {
 	}
 }
 
-// unknown
-func runStreamer(steamer Streamer, streamers []Streamer, fi *FileInfo, chunk []byte) error {
-	return nil
-}
-
 // Run data through a Stream, stopping when any of them
 // signals EOS
 func (s *Stream) streamData(streamers []Streamer, fi *FileInfo, chunk []byte) error {
