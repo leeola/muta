@@ -32,7 +32,7 @@ func (s *Stream) streamData(streamers []Streamer, fi *FileInfo, chunk []byte) er
 	var sFi *FileInfo
 	var err error
 	for _, streamer := range streamers {
-		sFi, chunk, err = streamer(fi, chunk)
+		sFi, chunk, err = streamer.Stream(fi, chunk)
 		switch {
 		case err != nil:
 			return err
@@ -55,7 +55,7 @@ func (s *Stream) streamEOF(streamers []Streamer, fi *FileInfo) error {
 	for repeatEOF := true; repeatEOF; {
 		repeatEOF = false
 		for i := 0; i < len(streamers); i++ {
-			sFi, chunk, err = streamers[i](fi, chunk)
+			sFi, chunk, err = streamers[i].Stream(fi, chunk)
 			if err != nil {
 				return err
 			}
@@ -85,7 +85,7 @@ func (s *Stream) startGenerator(generator Streamer, receivers []Streamer) error 
 	var chunk []byte
 	var err error
 	for true {
-		fi, chunk, err = generator(nil, nil)
+		fi, chunk, err = generator.Stream(nil, nil)
 		if err != nil {
 			return err
 		}

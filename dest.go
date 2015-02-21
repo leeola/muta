@@ -46,8 +46,8 @@ func Dest(d string, args ...interface{}) Streamer {
 
 	// A staging variable for the currently working file.
 	var f *os.File
-	return func(fi *FileInfo, chunk []byte) (*FileInfo,
-		[]byte, error) {
+	return NewEasyStreamer("muta.Dest", func(fi *FileInfo, chunk []byte) (
+		*FileInfo, []byte, error) {
 		// If fi is nil, then this func is now the generator. Dest() has no
 		// need to generate, so signal EOS
 		// If chunk is nil, we're at EOF
@@ -131,5 +131,5 @@ func Dest(d string, args ...interface{}) Streamer {
 
 		// Return EOS always. Dest() writes everything, like a boss..?
 		return nil, nil, err
-	}
+	})
 }

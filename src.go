@@ -105,7 +105,8 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 		err <- nil
 	}()
 
-	return func(inFi *FileInfo, inC []byte) (*FileInfo, []byte, error) {
+	return NewEasyStreamer("muta.Src", func(inFi *FileInfo,
+		inC []byte) (*FileInfo, []byte, error) {
 		// If there is an incoming file pass the data along unmodified. This
 		// func doesn't care to modify the data in any way
 		if inFi != nil {
@@ -114,5 +115,5 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 
 		read <- true
 		return <-fi, <-chunk, <-err
-	}
+	})
 }

@@ -22,7 +22,37 @@ type FileInfo struct {
 	Ctx          map[string]interface{}
 }
 
-type Streamer func(*FileInfo, []byte) (*FileInfo, []byte, error)
+// An alias for NewEasyStreamer. I'm undecided which func name i want to use, currently.
+func NewStreamer(s string, f func(*FileInfo, []byte) (*FileInfo, []byte, error)) Streamer {
+	return NewEasyStreamer(s, f)
+}
+
+func NewEasyStreamer(s string, f func(*FileInfo, []byte) (*FileInfo, []byte, error)) Streamer {
+	return &EasyStreamer{name: s, stream: f}
+}
+
+// The EasyStreamer implements the Streamer interace by using the embedded
+// `name` and `stream` value and func. This is purely a convenience method,
+// so Streamer implementors don't have to implement the Streamer interface
+// if they don't want to.
+type EasyStreamer struct {
+	name   string
+	stream func(*FileInfo, []byte) (*FileInfo, []byte, error)
+	Streamer
+}
+
+func (es *EasyStreamer) Name() string {
+	return es.name
+}
+
+func (es *EasyStreamer) Stream(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+	return es.stream(fi, chunk)
+}
+
+type Streamer interface {
+	Stream(*FileInfo, []byte) (*FileInfo, []byte, error)
+	Name() string
+}
 
 // A convenience function to let functions that return Streamers
 // "return an error". Ie, the following syntax:
@@ -37,7 +67,7 @@ type Streamer func(*FileInfo, []byte) (*FileInfo, []byte, error)
 // ErrorStreamer will simply return a Streamer that will return an
 // error when called.
 func ErrorStreamer(err error) Streamer {
-	return func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+	return NewStreamer("muta.ErrorStreamer", func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
 		return fi, chunk, err
-	}
+	})
 }

@@ -16,7 +16,7 @@ func TestDest(t *testing.T) {
 	os.RemoveAll("_test/tmp/dest")
 
 	Convey("Should create the the destination if needed", t, func() {
-		s := Dest("_test/tmp/dest")
+		s := Dest("_test/tmp/dest").Stream
 		f := &FileInfo{
 			Name: "file",
 			Path: ".",
@@ -32,7 +32,7 @@ func TestDest(t *testing.T) {
 	os.RemoveAll("_test/tmp/path")
 
 	Convey("Should create the path in the dest if needed", t, func() {
-		s := Dest("_test/tmp")
+		s := Dest("_test/tmp").Stream
 		f := &FileInfo{
 			Name: "file",
 			Path: "path/foo/bar",
@@ -48,7 +48,7 @@ func TestDest(t *testing.T) {
 	os.Remove("_test/tmp/file")
 
 	Convey("Should create the file in the destination", t, func() {
-		s := Dest("_test/tmp")
+		s := Dest("_test/tmp").Stream
 		f := &FileInfo{
 			Name: "file",
 			Path: ".",
@@ -67,7 +67,7 @@ func TestDest(t *testing.T) {
 	os.Remove(filepath.Join(tmpDir, "file"))
 
 	Convey("Should write incoming bytes to a new file", t, func() {
-		s := Dest("_test/tmp")
+		s := Dest("_test/tmp").Stream
 		f := &FileInfo{
 			Name: "file",
 			Path: ".",
@@ -93,7 +93,7 @@ func TestDest(t *testing.T) {
 
 	Convey("Should write incoming bytes and replace an "+
 		"existing file", t, func() {
-		s := Dest(tmpDir)
+		s := Dest(tmpDir).Stream
 		f := NewFileInfo("file")
 
 		_, _, err := s(f, []byte("foo"))
@@ -115,7 +115,7 @@ func TestDest(t *testing.T) {
 
 	Convey("Should write to the given file even if the filename "+
 		"changes after opening the writer", t, func() {
-		s := Dest(tmpDir)
+		s := Dest(tmpDir).Stream
 		f := NewFileInfo("file")
 		_, _, err := s(f, []byte("foo"))
 		So(err, ShouldBeNil)
@@ -137,7 +137,7 @@ func TestDest(t *testing.T) {
 	os.Remove(filepath.Join(tmpDir, "file1"))
 
 	Convey("Should write all incoming files", t, func() {
-		s := Dest(tmpDir)
+		s := Dest(tmpDir).Stream
 		fs := []*FileInfo{
 			NewFileInfo("file0"),
 			NewFileInfo("file1"),
