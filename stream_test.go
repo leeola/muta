@@ -232,9 +232,7 @@ func TestStreamstartGenerator(t *testing.T) {
 			}
 			c := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
 				calls = append(calls, "c")
-				if chunk != nil {
-					data = append(data, chunk...)
-				}
+				data = append(data, chunk...)
 				return nil, nil, nil
 			}
 			s := Stream{}
