@@ -250,6 +250,34 @@ func TestStreamstartGenerator(t *testing.T) {
 }
 
 func TestStreamStart(t *testing.T) {
+	Convey("Should stop Streaming if a Streamer returns an error", t, func() {
+		calls := []string{}
+		originalFi := &FileInfo{Name: "foo"}
+		s := Stream{}
+		s.Pipe(func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+			calls = append(calls, "gen")
+			if ContainsStringCount(calls, "gen") == 1 {
+				return originalFi, nil, nil
+			} else {
+				return nil, nil, nil
+			}
+		})
+		s.Pipe(func(fi *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+			calls = append(calls, "a")
+			return fi, nil, nil
+		})
+		s.Pipe(func(fi *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+			calls = append(calls, "b")
+			return fi, nil, errors.New("Test error")
+		})
+		s.Pipe(func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+			calls = append(calls, "c")
+			return nil, nil, nil
+		})
+		err := s.Start()
+		So(err, ShouldNotBeNil)
+		So(calls, ShouldResemble, []string{"gen", "a", "b"})
+	})
 }
 
 func TestSrc(t *testing.T) {

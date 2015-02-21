@@ -14,12 +14,16 @@ func (s *Stream) Pipe(f Streamer) *Stream {
 	return s
 }
 
-func (s *Stream) Start() {
+func (s *Stream) Start() error {
 	for i, fn := range s.Streamers {
 		// In the near future, we need to check for errors returned by
 		// the Streamer. Ignoring them for now.
-		s.startGenerator(fn, s.Streamers[i+1:])
+		err := s.startGenerator(fn, s.Streamers[i+1:])
+		if err != nil {
+			return err
+		}
 	}
+	return nil
 }
 
 // Run data through a Stream, stopping when any of them
