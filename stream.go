@@ -15,10 +15,8 @@ func (s *Stream) Pipe(f Streamer) *Stream {
 }
 
 func (s *Stream) Start() error {
-	for i, fn := range s.Streamers {
-		// In the near future, we need to check for errors returned by
-		// the Streamer. Ignoring them for now.
-		err := s.startGenerator(fn, s.Streamers[i+1:])
+	for i, gen := range s.Streamers {
+		err := s.startGenerator(gen, s.Streamers[i+1:])
 		if err != nil {
 			return err
 		}
