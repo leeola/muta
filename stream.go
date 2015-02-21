@@ -1,6 +1,9 @@
 package muta
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+)
 
 type Stream struct {
 	Streamers []Streamer
@@ -19,80 +22,86 @@ func (s *Stream) Start() {
 	}
 }
 
-// TODO: Split this function into smaller logical sections, for ease
-// of debugging
-func (s *Stream) startGenerator(generator Streamer,
-	receivers []Streamer) (err error) {
+// unknown
+func runStreamer(steamer Streamer, streamers []Streamer, fi *FileInfo, chunk []byte) error {
+	return nil
+}
+
+// Run data through a Stream, stopping when any of them
+// signals EOS
+func (s *Stream) streamData(streamers []Streamer, fi *FileInfo, chunk []byte) error {
+	var sFi *FileInfo
+	var err error
+	for _, streamer := range streamers {
+		sFi, chunk, err = streamer(fi, chunk)
+		switch {
+		case err != nil:
+			return err
+		case sFi == nil:
+			return nil
+		case sFi != fi:
+			return errors.New("Not Implemented. At this time, the same file" +
+				"that was given must be returned")
+		}
+	}
+	return nil
+}
+
+// Stream EOF through the Streamers. If any Streamer returns data,
+// that data is run through like normal... TODO.. write this lol
+func (s *Stream) streamEOF(streamers []Streamer, fi *FileInfo) error {
+	var sFi *FileInfo
+	var chunk []byte
+	var err error
+	for repeatEOF := true; repeatEOF; {
+		repeatEOF = false
+		for i := 0; i < len(streamers); i++ {
+			sFi, chunk, err = streamers[i](fi, chunk)
+			if err != nil {
+				return err
+			}
+			// If a streamer signaled EOS, exit the inner loop to repeat the
+			// stream, if needed.
+			if sFi == nil {
+				break
+			}
+			// If a streamer returned a different file than it was given
+			// error out. This is not currently supported.
+			if sFi != fi {
+				return errors.New(fmt.Sprintf(
+					"Not Implemented. At this time, the same file that was "+
+						"given must be returned. Original file '%s', returned "+
+						"file '%'", fi.Name, sFi.Name))
+			}
+			if chunk != nil {
+				repeatEOF = true
+			}
+		}
+	}
+	return nil
+}
+
+func (s *Stream) startGenerator(generator Streamer, receivers []Streamer) error {
+	var fi *FileInfo
+	var chunk []byte
+	var err error
 	for true {
-		genFi, genChunk, err := generator(nil, nil)
+		fi, chunk, err = generator(nil, nil)
 		if err != nil {
 			return err
 		}
 
-		// Generator signalled EOS
-		if genFi == nil {
+		if fi == nil {
 			return nil
 		}
 
-		var fi *FileInfo
-		var chunk []byte
-		var streamed bool
-
-		var fn Streamer
-		for i := 0; i < len(receivers); i++ {
-			if i == 0 {
-				fi = genFi
-				chunk = genChunk
-				streamed = false
-			}
-
-			fn = receivers[i]
-			fi, chunk, err = fn(fi, chunk)
-			if err != nil {
-				return err
-			}
-
-			// If any receiver streamed data, set streamed = true
-			if chunk != nil {
-				streamed = true
-			}
-
-			// Receiver signaled EOS
-			if fi == nil {
-				if streamed && genChunk == nil {
-					// If any Receiver returned any data, we need to repeat
-					// the stream until they all (up until EOS atleast) return
-					// EOF
-					// Repeat the stream
-					i = -1
-					continue
-				} else if chunk == nil || genChunk != nil {
-					// chunk == nil:
-					// Receiver signaled EOS and EOF
-					//
-					// genChunk != nil
-					// Receiver signaled EOS but not EOF, **and** the Generator
-					// is not signaling EOF (ie, it's still streaming) data.
-					// Repeating here would be bad, since it would repeat
-					// the generator data.
-					//
-					// Stop the stream
-					break
-				} else {
-					// Receiver signaled EOS and but not EOF
-					// Repeat the stream
-					i = -1
-					continue
-				}
-			}
-
-			// For now, if the receiver returns a different file than the
-			// generator, error out. We're not yet supporting receiver->gen
-			// converting.
-			if fi != genFi {
-				return errors.New("Receivers turning into Generators is not " +
-					"yet implemented")
-			}
+		if chunk != nil {
+			err = s.streamData(receivers, fi, chunk)
+		} else {
+			err = s.streamEOF(receivers, fi)
+		}
+		if err != nil {
+			return err
 		}
 	}
 	return nil

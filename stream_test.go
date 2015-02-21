@@ -96,7 +96,8 @@ func TestStreamstartGenerator(t *testing.T) {
 			return nil, nil, nil
 		}
 		s := Stream{}
-		s.startGenerator(a, []Streamer{b, c})
+		err := s.startGenerator(a, []Streamer{b, c})
+		So(err, ShouldBeNil)
 		So(calls, ShouldResemble, []string{"a", "b", "a"})
 	})
 
@@ -130,77 +131,79 @@ func TestStreamstartGenerator(t *testing.T) {
 		So(chunks, ShouldResemble, [][]byte{nil, nil})
 	})
 
-	Convey("When a Streamer signals EOS but not EOF,", t, func() {
-		Convey("Repeat the stream until they signal EOF", func() {
-			calls := []string{}
-			originalFi := &FileInfo{Name: "foo"}
-			gen := func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
-				calls = append(calls, "gen")
-				switch ContainsStringCount(calls, "gen") {
-				case 1:
-					return originalFi, nil, nil
-				default:
-					return nil, nil, nil
-				}
-			}
-			a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
-				calls = append(calls, "a")
-				if len(calls) <= 3 {
-					// By returning EOS but not EOF, we cause the stream to
-					// repeat. It stops here for now, but it repeats the last
-					// generator return until this func returns a nil byte
-					return nil, []byte{}, nil
-				} else {
-					return fi, chunk, nil
-				}
-			}
-			b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
-				calls = append(calls, "b")
-				return fi, chunk, nil
-			}
-			s := Stream{}
-			s.startGenerator(gen, []Streamer{a, b})
-			So(calls, ShouldResemble, []string{
-				"gen", "a", "a", "a", "b", "gen"})
-		})
+	// Might be removing this "feature". I'm not positive that it's
+	// existence justifies the complexity added to the stream API
+	//Convey("When a Streamer signals EOS but not EOF,", t, func() {
+	//	Convey("Repeat the stream until they signal EOF", func() {
+	//		calls := []string{}
+	//		originalFi := &FileInfo{Name: "foo"}
+	//		gen := func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+	//			calls = append(calls, "gen")
+	//			switch ContainsStringCount(calls, "gen") {
+	//			case 1:
+	//				return originalFi, nil, nil
+	//			default:
+	//				return nil, nil, nil
+	//			}
+	//		}
+	//		a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+	//			calls = append(calls, "a")
+	//			if len(calls) <= 3 {
+	//				// By returning EOS but not EOF, we cause the stream to
+	//				// repeat. It stops here for now, but it repeats the last
+	//				// generator return until this func returns a nil byte
+	//				return nil, []byte{}, nil
+	//			} else {
+	//				return fi, chunk, nil
+	//			}
+	//		}
+	//		b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+	//			calls = append(calls, "b")
+	//			return fi, chunk, nil
+	//		}
+	//		s := Stream{}
+	//		s.startGenerator(gen, []Streamer{a, b})
+	//		So(calls, ShouldResemble, []string{
+	//			"gen", "a", "a", "a", "b", "gen"})
+	//	})
 
-		Convey("Do not repeat the Stream if the Generator did not "+
-			"return EOF", func() {
-			calls := []string{}
-			originalFi := &FileInfo{Name: "foo"}
-			gen := func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
-				calls = append(calls, "gen")
-				switch ContainsStringCount(calls, "gen") {
-				case 1:
-					return originalFi, []byte("foo"), nil
-				case 2:
-					return originalFi, nil, nil
-				default:
-					return nil, nil, nil
-				}
-			}
-			a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
-				calls = append(calls, "a")
-				if ContainsStringCount(calls, "a") == 1 {
-					// This normally signals stream repeat, but it should not
-					// repeat here because the Generator did not signal EOS
-					// EOF
-					return nil, []byte{}, nil
-				} else {
-					return fi, chunk, nil
-				}
-			}
-			b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
-				calls = append(calls, "b")
-				return fi, chunk, nil
-			}
-			s := Stream{}
-			s.startGenerator(gen, []Streamer{a, b})
-			So(calls, ShouldResemble, []string{
-				"gen", "a", // "a" signals EOS (with a repeat []byte)
-				"gen", "a", "b", "gen"})
-		})
-	})
+	//	Convey("Do not repeat the Stream if the Generator did not "+
+	//		"return EOF", func() {
+	//		calls := []string{}
+	//		originalFi := &FileInfo{Name: "foo"}
+	//		gen := func(_ *FileInfo, _ []byte) (*FileInfo, []byte, error) {
+	//			calls = append(calls, "gen")
+	//			switch ContainsStringCount(calls, "gen") {
+	//			case 1:
+	//				return originalFi, []byte("foo"), nil
+	//			case 2:
+	//				return originalFi, nil, nil
+	//			default:
+	//				return nil, nil, nil
+	//			}
+	//		}
+	//		a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+	//			calls = append(calls, "a")
+	//			if ContainsStringCount(calls, "a") == 1 {
+	//				// This normally signals stream repeat, but it should not
+	//				// repeat here because the Generator did not signal EOS
+	//				// EOF
+	//				return nil, []byte{}, nil
+	//			} else {
+	//				return fi, chunk, nil
+	//			}
+	//		}
+	//		b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+	//			calls = append(calls, "b")
+	//			return fi, chunk, nil
+	//		}
+	//		s := Stream{}
+	//		s.startGenerator(gen, []Streamer{a, b})
+	//		So(calls, ShouldResemble, []string{
+	//			"gen", "a", // "a" signals EOS (with a repeat []byte)
+	//			"gen", "a", "b", "gen"})
+	//	})
+	//})
 
 	Convey("When a Generator signals EOS and EOF", t, func() {
 		Convey("Repeat the Stream if any Receiver returns bytes", func() {
@@ -215,16 +218,16 @@ func TestStreamstartGenerator(t *testing.T) {
 					return nil, nil, nil
 				}
 			}
-			a := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+			a := func(fi *FileInfo, _ []byte) (*FileInfo, []byte, error) {
 				calls = append(calls, "a")
-				return fi, chunk, nil
+				return fi, nil, nil
 			}
-			b := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+			b := func(fi *FileInfo, _ []byte) (*FileInfo, []byte, error) {
 				calls = append(calls, "b")
 				if ContainsStringCount(calls, "b") <= 2 {
 					return fi, []byte("foo"), nil
 				} else {
-					return fi, chunk, nil
+					return fi, nil, nil
 				}
 			}
 			c := func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
@@ -235,14 +238,15 @@ func TestStreamstartGenerator(t *testing.T) {
 				return nil, nil, nil
 			}
 			s := Stream{}
-			s.startGenerator(gen, []Streamer{a, b, c})
-			So(data, ShouldResemble, []byte("foofoo"))
+			err := s.startGenerator(gen, []Streamer{a, b, c})
+			So(err, ShouldBeNil)
 			So(calls, ShouldResemble, []string{
 				"gen", "a", "b", "c", // b returned data
 				"a", "b", "c", // b returned data
 				"a", "b", "c", // b returned EOF
 				"gen", // gen returned EOS
 			})
+			So(string(data), ShouldResemble, "foofoo")
 		})
 	})
 }
