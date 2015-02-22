@@ -98,7 +98,7 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 		}
 
 		for _, p := range globbedPaths {
-			logging.Debug([]string{opts.Name}, "Opening", p)
+			logging.Debug([]string{opts.Name}, "Reading", p)
 			err := loadFile(p)
 			if err != nil {
 				return
