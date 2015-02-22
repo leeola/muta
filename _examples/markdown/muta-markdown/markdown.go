@@ -51,7 +51,7 @@ func write(b *bytes.Buffer, fi *muta.FileInfo, _ []byte) (*muta.FileInfo, []byte
 
 func Markdown() muta.Streamer {
 	var b bytes.Buffer
-	return func(fi *muta.FileInfo, chunk []byte) (*muta.FileInfo, []byte, error) {
+	return muta.NewEasyStreamer("./markdown.Markdown", func(fi *muta.FileInfo, chunk []byte) (*muta.FileInfo, []byte, error) {
 		switch {
 		case fi == nil:
 			// If fi is nil, Markdown() is being asked to generate files.
@@ -69,5 +69,5 @@ func Markdown() muta.Streamer {
 			// If chunk isn't nil, buffer the data
 			return buffer(&b, chunk)
 		}
-	}
+	})
 }
