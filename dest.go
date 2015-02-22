@@ -10,6 +10,7 @@ import (
 type DestOpts struct {
 	// Not implemented
 	Clean bool
+	Name  string
 	// Not implemented
 	Overwrite bool
 }
@@ -31,6 +32,9 @@ func Dest(d string, args ...interface{}) Streamer {
 			))
 		}
 	}
+	if opts.Name == "" {
+		opts.Name = "muta.Dest"
+	}
 
 	if opts.Clean {
 		err := os.RemoveAll(d)
@@ -46,10 +50,10 @@ func Dest(d string, args ...interface{}) Streamer {
 
 	// A staging variable for the currently working file.
 	var f *os.File
-	return NewEasyStreamer("muta.Dest", func(fi *FileInfo, chunk []byte) (
+	return NewEasyStreamer(opts.Name, func(fi *FileInfo, chunk []byte) (
 		*FileInfo, []byte, error) {
 		// If fi is nil, then this func is now the generator. Dest() has no
-		// need to generate, so signal EOS
+		// need to generate, so do nothing.
 		// If chunk is nil, we're at EOF
 		// In both cases, Close the file if it is open.
 		if fi == nil || chunk == nil {
@@ -74,6 +78,8 @@ func Dest(d string, args ...interface{}) Streamer {
 			if err != nil {
 				return fi, chunk, err
 			}
+
+			Log([]string{opts.Name}, "Writing", destFilepath)
 
 			osFi, err := os.Stat(destFilepath)
 

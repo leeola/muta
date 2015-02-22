@@ -8,6 +8,7 @@ import (
 )
 
 type SrcOpts struct {
+	Name     string
 	ReadSize uint
 }
 
@@ -17,6 +18,9 @@ func Src(srcs ...string) *Stream {
 }
 
 func SrcStreamer(ps []string, opts SrcOpts) Streamer {
+	if opts.Name == "" {
+		opts.Name = "muta.Src"
+	}
 	if opts.ReadSize == 0 {
 		opts.ReadSize = 50
 	}
@@ -92,6 +96,7 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 		}
 
 		for _, p := range globbedPaths {
+			Log([]string{opts.Name}, "Opening", p)
 			err := loadFile(p)
 			if err != nil {
 				return
@@ -105,7 +110,7 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 		err <- nil
 	}()
 
-	return NewEasyStreamer("muta.Src", func(inFi *FileInfo,
+	return NewEasyStreamer(opts.Name, func(inFi *FileInfo,
 		inC []byte) (*FileInfo, []byte, error) {
 		// If there is an incoming file pass the data along unmodified. This
 		// func doesn't care to modify the data in any way
