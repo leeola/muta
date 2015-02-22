@@ -17,17 +17,36 @@ func init() {
 type LogLevel uint8
 
 const (
-	VERBOSE = iota
+	VERBOSE LogLevel = iota
 	DEBUG
 	INFO
 	WARN
 	ERROR
 )
+const DEFAULT LogLevel = INFO
+
+func LevelFromString(s string) LogLevel {
+	s = strings.ToUpper(s)
+	switch s {
+	case "VERBOSE":
+		return VERBOSE
+	case "DEBUG":
+		return DEBUG
+	case "INFO":
+		return INFO
+	case "WARN":
+		return WARN
+	case "ERROR":
+		return ERROR
+	default:
+		return DEFAULT
+	}
+}
 
 func NewLogger(w io.Writer) *Logger {
 	return &Logger{
 		writer:   w,
-		logLevel: WARN,
+		logLevel: DEFAULT,
 		tags:     nil,
 	}
 }

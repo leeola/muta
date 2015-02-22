@@ -3,8 +3,13 @@ package muta
 import (
 	"testing"
 
+	"github.com/leeola/muta/logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func init() {
+	logging.SetLevel(logging.ERROR)
+}
 
 func TestSrcStreamer(t *testing.T) {
 	Convey("Should pipe incoming chunks", t, func() {

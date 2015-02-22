@@ -7,8 +7,13 @@ import (
 	"path/filepath"
 	"testing"
 
+	"github.com/leeola/muta/logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func init() {
+	logging.SetLevel(logging.ERROR)
+}
 
 func TestDest(t *testing.T) {
 	tmpDir := filepath.Join("_test", "tmp")
