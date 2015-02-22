@@ -1,10 +1,18 @@
 package muta
 
 import (
+	"bytes"
+	"errors"
+	"strings"
 	"testing"
 
+	"github.com/leeola/muta/logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
+
+func init() {
+	logging.SetLevel(logging.ERROR)
+}
 
 func TestNewTasker(t *testing.T) {
 	Convey("Should initialize the Tasks map", t, func() {
@@ -137,5 +145,30 @@ func TestTaskerRunTask(t *testing.T) {
 		Convey("a[a]", nil)
 		Convey("a[b], b[a]", nil)
 		Convey("a[b], b[c], c[a]", nil)
+	})
+
+	Convey("Should log tasks to the Tasker's Logger", t, func() {
+		ta := NewTasker()
+		var b bytes.Buffer
+		ta.Logger = logging.NewLogger(&b)
+		ta.Task("tname", func() {})
+		err := ta.RunTask("tname")
+		So(err, ShouldBeNil)
+		s := strings.ToLower(b.String())
+		So(s, ShouldContainSubstring, "tname")
+		So(s, ShouldContainSubstring, "starting")
+		So(s, ShouldContainSubstring, "complete")
+
+		Convey("Including errors", func() {
+			ta.Task("terr", func() error {
+				return errors.New("terr's error")
+			})
+			err := ta.RunTask("terr")
+			So(err, ShouldNotBeNil)
+			s := strings.ToLower(b.String())
+			So(s, ShouldContainSubstring, "tname")
+			So(s, ShouldContainSubstring, "starting")
+			So(s, ShouldContainSubstring, "error")
+		})
 	})
 }

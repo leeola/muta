@@ -34,7 +34,7 @@ Usage:
   muta --version
 %s
 Options:
-  -l=<level>  The log level [default: warn]
+  -l=<level>  The log level [default: info]
   -t=<tags>   A comma separated list of logging tags
   -h --help   Show this screen.
   --version   Show version.

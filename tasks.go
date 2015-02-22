@@ -7,6 +7,8 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+
+	"github.com/leeola/muta/logging"
 )
 
 type Handler func()
@@ -26,12 +28,14 @@ func Run() {
 
 func NewTasker() *Tasker {
 	return &Tasker{
-		Tasks: make(map[string]*TaskerTask),
+		Tasks:  make(map[string]*TaskerTask),
+		Logger: logging.DefaultLogger(),
 	}
 }
 
 type Tasker struct {
-	Tasks map[string]*TaskerTask
+	Tasks  map[string]*TaskerTask
+	Logger *logging.Logger
 }
 
 type TaskerTask struct {
@@ -99,11 +103,21 @@ func (tr *Tasker) Run() error {
 	return tr.RunTask("default")
 }
 
-func (tr *Tasker) RunTask(tn string) error {
+func (tr *Tasker) RunTask(tn string) (err error) {
 	t := tr.Tasks[tn]
 	if t == nil {
 		return errors.New(fmt.Sprintf("Task \"%s\" does not exist.", tn))
 	}
+
+	tr.Logger.Info([]string{"Task"}, tn, "starting")
+	defer func() {
+		if err != nil {
+			tr.Logger.Error([]string{"Task"}, tn,
+				"returned an Error:", err)
+		} else {
+			tr.Logger.Info([]string{"Task"}, tn, "complete")
+		}
+	}()
 
 	if t.Dependencies != nil {
 		for _, d := range t.Dependencies {
@@ -116,7 +130,8 @@ func (tr *Tasker) RunTask(tn string) error {
 	} else if t.ErrorHandler != nil {
 		return t.ErrorHandler()
 	} else if t.StreamHandler != nil {
-		s, err := t.StreamHandler()
+		var s *Stream
+		s, err = t.StreamHandler()
 		if err != nil {
 			return err
 		}
@@ -126,5 +141,6 @@ func (tr *Tasker) RunTask(tn string) error {
 	} else if t.ContextHandler != nil {
 		return errors.New("Not implemented")
 	}
+
 	return nil
 }

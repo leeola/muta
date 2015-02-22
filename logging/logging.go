@@ -167,6 +167,10 @@ func (l *Logger) Errorf(t []string, s string, args ...interface{}) {
 
 // Default loggers
 
+func DefaultLogger() *Logger {
+	return defaultLogger
+}
+
 func SetLevel(lv LogLevel) {
 	defaultLogger.SetLevel(lv)
 }
