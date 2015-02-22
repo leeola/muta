@@ -136,7 +136,10 @@ func (tr *Tasker) RunTask(tn string) (err error) {
 			return err
 		}
 		if s != nil {
-			s.Start()
+			err = s.Start()
+			if err != nil {
+				return err
+			}
 		}
 	} else if t.ContextHandler != nil {
 		return errors.New("Not implemented")
