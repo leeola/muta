@@ -5,6 +5,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+
+	"github.com/leeola/muta/logging"
 )
 
 type DestOpts struct {
@@ -79,7 +81,7 @@ func Dest(d string, args ...interface{}) Streamer {
 				return fi, chunk, err
 			}
 
-			Log([]string{opts.Name}, "Writing", destFilepath)
+			logging.Debug([]string{opts.Name}, "Writing", destFilepath)
 
 			osFi, err := os.Stat(destFilepath)
 

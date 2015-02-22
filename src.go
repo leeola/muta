@@ -5,6 +5,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/leeola/muta/logging"
 )
 
 type SrcOpts struct {
@@ -96,7 +98,7 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 		}
 
 		for _, p := range globbedPaths {
-			Log([]string{opts.Name}, "Opening", p)
+			logging.Debug([]string{opts.Name}, "Opening", p)
 			err := loadFile(p)
 			if err != nil {
 				return
