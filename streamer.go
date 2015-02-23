@@ -71,3 +71,9 @@ func ErrorStreamer(err error) Streamer {
 		return fi, chunk, err
 	})
 }
+
+func PassThroughStreamer() Streamer {
+	return NewEasyStreamer("muta.PassThroughStreamer", func(fi *FileInfo, chunk []byte) (*FileInfo, []byte, error) {
+		return fi, chunk, nil
+	})
+}
