@@ -56,16 +56,13 @@ func Dest(d string, args ...interface{}) Streamer {
 		*FileInfo, []byte, error) {
 		// If fi is nil, then this func is now the generator. Dest() has no
 		// need to generate, so do nothing.
-		// If chunk is nil, we're at EOF
-		// In both cases, Close the file if it is open.
-		if fi == nil || chunk == nil {
-			var err error
-			// Close f, and set it to nil if needed
+		if fi == nil {
 			if f != nil {
-				err = f.Close()
-				f = nil
+				// If the file is not nil, we never received EOF for it or
+				// we failed to closed the file for some reason.
+				return nil, nil, errors.New("File was not closed properly")
 			}
-			return fi, chunk, err
+			return nil, nil, nil
 		}
 
 		destPath := filepath.Join(d, fi.Path)
@@ -131,6 +128,17 @@ func Dest(d string, args ...interface{}) Streamer {
 					}
 				}
 			}
+		}
+
+		// If chunk is nil, close the file
+		if chunk == nil {
+			var err error
+			// Close f, and set it to nil if needed
+			if f != nil {
+				err = f.Close()
+				f = nil
+			}
+			return fi, chunk, err
 		}
 
 		// lenth written can be ignored, because Write() returns an error

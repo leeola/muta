@@ -167,4 +167,29 @@ func TestDest(t *testing.T) {
 		So(err, ShouldBeNil)
 		So(string(b), ShouldEqual, "foo1bar1")
 	})
+
+	os.Remove(filepath.Join(tmpDir, "file0"))
+	os.Remove(filepath.Join(tmpDir, "file1"))
+
+	Convey("Should create files even if they have no contents", t, func() {
+		s := Dest(tmpDir).Stream
+		fs := []*FileInfo{
+			NewFileInfo("file0"),
+			NewFileInfo("file1"),
+		}
+		for _, f := range fs {
+			_, _, err := s(f, nil)
+			So(err, ShouldBeNil)
+		}
+		_, _, err := s(nil, nil)
+		So(err, ShouldBeNil)
+
+		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file0"))
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, "")
+
+		b, err = ioutil.ReadFile(filepath.Join(tmpDir, "file1"))
+		So(err, ShouldBeNil)
+		So(string(b), ShouldEqual, "")
+	})
 }
