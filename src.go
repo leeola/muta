@@ -12,6 +12,13 @@ import (
 type SrcOpts struct {
 	Name     string
 	ReadSize uint
+
+	// The base directory that will be trimmed from the output path.
+	// For example, `SrcStreamer("foo/bar/baz")` would set a Base of
+	// `"foo/bar"`, so that the FileInfo has a Path of `.`. Trimming
+	// `"foo/bar"` from the Path. You can override this, by setting
+	// this value manually.
+	Base string
 }
 
 func Src(srcs ...string) *Stream {
@@ -19,12 +26,49 @@ func Src(srcs ...string) *Stream {
 	return s.Pipe(SrcStreamer(srcs, SrcOpts{}))
 }
 
+// this func will be moved into it's own Package, and probably it's own
+// repo in the future
+// Note that we're just supporting the * glob star currently, as i believe
+// that's the only supported glob pattern, from the official lib.
+func globsToBase(globs ...string) string {
+	var base string
+	var depth int
+	var globChars string = "*"
+
+	for _, glob := range globs {
+		var gBase string
+		var gDepth int
+		if i := strings.IndexAny(glob, globChars); i > -1 {
+			gBase = filepath.Dir(glob[:i])
+		} else {
+			gBase = filepath.Dir(glob)
+		}
+		gDepth = strings.Count(gBase, string(filepath.Separator))
+		// If there is no base, or
+		// if the glob's depth is smaller (more base) than the depth
+		if base == "" || gDepth < depth {
+			base = gBase
+			depth = gDepth
+		}
+	}
+	return base
+}
+
 func SrcStreamer(ps []string, opts SrcOpts) Streamer {
+	// Clean the paths to remove any oddities (before setting opts)
+	for i, p := range ps {
+		ps[i] = filepath.Clean(p)
+	}
+
+	// Set default options
 	if opts.Name == "" {
 		opts.Name = "muta.Src"
 	}
 	if opts.ReadSize == 0 {
 		opts.ReadSize = 50
+	}
+	if opts.Base == "" {
+		opts.Base = globsToBase(ps...)
 	}
 
 	// Setup our channels
@@ -49,6 +93,11 @@ func SrcStreamer(ps []string, opts SrcOpts) Streamer {
 		loadFile := func(p string) error {
 			pchunks := make([]byte, opts.ReadSize)
 			pfi := NewFileInfo(p)
+			// Trim the base from the file
+			pfi.Path = strings.TrimPrefix(pfi.Path, opts.Base)
+			if pfi.Path == "" {
+				pfi.Path = "."
+			}
 
 			f, ferr := os.Open(p)
 			defer f.Close()

@@ -1,6 +1,7 @@
 package muta
 
 import (
+	"path/filepath"
 	"testing"
 
 	"github.com/leeola/muta/logging"
@@ -11,7 +12,22 @@ func init() {
 	logging.SetLevel(logging.ERROR)
 }
 
+func TestGlobsToBase(t *testing.T) {
+	Convey("Should return the correct base", t, func() {
+		So(globsToBase("."), ShouldEqual, ".")
+		So(globsToBase("foo/bar.baz"), ShouldEqual, "foo")
+		So(globsToBase("foo/*.baz"), ShouldEqual, "foo")
+		So(globsToBase("foo/bar/**/*.baz"), ShouldEqual, "foo/bar")
+		So(globsToBase(
+			"foo/bar/baz",
+			"foo/**/baz",
+		), ShouldEqual, "foo")
+	})
+}
+
 func TestSrcStreamer(t *testing.T) {
+	tmpDir := filepath.Join("_test", "fixtures")
+
 	Convey("Should pipe incoming chunks", t, func() {
 		s := SrcStreamer([]string{}, SrcOpts{}).Stream
 		fi := &FileInfo{}
@@ -37,7 +53,7 @@ func TestSrcStreamer(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(fi, ShouldResemble, &FileInfo{
 				Name:         "hello",
-				Path:         "_test/fixtures",
+				Path:         ".",
 				OriginalName: "hello",
 				OriginalPath: "_test/fixtures",
 				Ctx:          map[string]interface{}{},
@@ -80,7 +96,7 @@ func TestSrcStreamer(t *testing.T) {
 			So(err, ShouldBeNil)
 			So(fi, ShouldResemble, &FileInfo{
 				Name:         "hello",
-				Path:         "_test/fixtures",
+				Path:         ".",
 				OriginalName: "hello",
 				OriginalPath: "_test/fixtures",
 				Ctx:          map[string]interface{}{},
@@ -117,14 +133,14 @@ func TestSrcStreamer(t *testing.T) {
 		}, SrcOpts{}).Stream
 		helloFi := &FileInfo{
 			Name:         "hello",
-			Path:         "_test/fixtures",
+			Path:         ".",
 			OriginalName: "hello",
 			OriginalPath: "_test/fixtures",
 			Ctx:          map[string]interface{}{},
 		}
 		worldFi := &FileInfo{
 			Name:         "world",
-			Path:         "_test/fixtures",
+			Path:         ".",
 			OriginalName: "world",
 			OriginalPath: "_test/fixtures",
 			Ctx:          map[string]interface{}{},
@@ -178,5 +194,24 @@ func TestSrcStreamer(t *testing.T) {
 		fi, _, err := s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi.Ctx, ShouldNotBeNil)
+	})
+
+	Convey("Should trim the base path", t, func() {
+		Convey("Up to the first glob", func() {
+			p := []string{filepath.Join(tmpDir, "nested", "markdown", "*.md")}
+			s := SrcStreamer(p, SrcOpts{}).Stream
+			var count int
+			var lastFi *FileInfo
+			for fi, _, err := s(nil, nil); fi != nil; fi, _, err = s(nil, nil) {
+				if fi == lastFi {
+					continue
+				}
+				So(err, ShouldBeNil)
+				So(fi.Path, ShouldEqual, ".")
+				lastFi = fi
+				count++
+			}
+			So(count, ShouldNotEqual, 0)
+		})
 	})
 }
