@@ -29,7 +29,7 @@ func TestSrcStreamer(t *testing.T) {
 	tmpDir := filepath.Join("_test", "fixtures")
 
 	Convey("Should pipe incoming chunks", t, func() {
-		s := SrcStreamer([]string{}, SrcOpts{}).Stream
+		s := NewSrcStreamer().Stream
 		fi := &FileInfo{}
 		b := []byte("chunk")
 		rfi, rb, err := s(fi, b)
@@ -40,15 +40,14 @@ func TestSrcStreamer(t *testing.T) {
 	})
 
 	Convey("Should return an error if the file cannot be found", t, func() {
-		s := SrcStreamer([]string{"_test/fixtures/404"}, SrcOpts{}).Stream
+		s := NewSrcStreamer("_test/fixtures/404").Stream
 		_, _, err := s(nil, nil)
 		So(err, ShouldNotBeNil)
 	})
 
 	Convey("Should load the given file and", t, func() {
 		Convey("Populate FileInfo with the file info", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello"},
-				SrcOpts{}).Stream
+			s := NewSrcStreamer("_test/fixtures/hello").Stream
 			fi, _, err := s(nil, nil)
 			So(err, ShouldBeNil)
 			So(fi, ShouldResemble, &FileInfo{
@@ -63,9 +62,10 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Return chunks of the file", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
+			s := (&SrcStreamer{
+				Sources:  []string{"_test/fixtures/hello"},
 				ReadSize: 5,
-			}).Stream
+			}).Init().Stream
 			_, b, err := s(nil, nil)
 			So(err, ShouldBeNil)
 			So(b, ShouldResemble, []byte("hello"))
@@ -74,9 +74,10 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Return multiple chunks of the file", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
+			s := (&SrcStreamer{
+				Sources:  []string{"_test/fixtures/hello"},
 				ReadSize: 3,
-			}).Stream
+			}).Init().Stream
 			_, b, err := s(nil, nil)
 			So(err, ShouldBeNil)
 			So(b, ShouldResemble, []byte("hel"))
@@ -88,9 +89,10 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Return a valid FileInfo at EOF", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
+			s := (&SrcStreamer{
+				Sources:  []string{"_test/fixtures/hello"},
 				ReadSize: 5,
-			}).Stream
+			}).Init().Stream
 			s(nil, nil)
 			fi, _, err := s(nil, nil)
 			So(err, ShouldBeNil)
@@ -104,9 +106,10 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Return a nil chunk at EOF", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
+			s := (&SrcStreamer{
+				Sources:  []string{"_test/fixtures/hello"},
 				ReadSize: 5,
-			}).Stream
+			}).Init().Stream
 			s(nil, nil)
 			_, b, err := s(nil, nil)
 			So(err, ShouldBeNil)
@@ -114,9 +117,10 @@ func TestSrcStreamer(t *testing.T) {
 		})
 
 		Convey("Trim byte array to length of data", func() {
-			s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{
+			s := (&SrcStreamer{
+				Sources:  []string{"_test/fixtures/hello"},
 				ReadSize: 4,
-			}).Stream
+			}).Init().Stream
 			_, b, _ := s(nil, nil)
 			So(b, ShouldResemble, []byte("hell"))
 			_, b, _ = s(nil, nil)
@@ -127,10 +131,10 @@ func TestSrcStreamer(t *testing.T) {
 	})
 
 	Convey("Should stream any number of files", t, func() {
-		s := SrcStreamer([]string{
+		s := NewSrcStreamer(
 			"_test/fixtures/hello",
 			"_test/fixtures/world",
-		}, SrcOpts{}).Stream
+		).Stream
 		helloFi := &FileInfo{
 			Name:         "hello",
 			Path:         ".",
@@ -171,7 +175,7 @@ func TestSrcStreamer(t *testing.T) {
 	})
 
 	Convey("Should support globbing", t, func() {
-		s := SrcStreamer([]string{"_test/fixtures/*.md"}, SrcOpts{}).Stream
+		s := NewSrcStreamer("_test/fixtures/*.md").Stream
 		files := []string{}
 		var err error
 		for true {
@@ -190,7 +194,7 @@ func TestSrcStreamer(t *testing.T) {
 	})
 
 	Convey("Should instantiate the Ctx map", t, func() {
-		s := SrcStreamer([]string{"_test/fixtures/hello"}, SrcOpts{}).Stream
+		s := NewSrcStreamer("_test/fixtures/hello").Stream
 		fi, _, err := s(nil, nil)
 		So(err, ShouldBeNil)
 		So(fi.Ctx, ShouldNotBeNil)
@@ -199,7 +203,7 @@ func TestSrcStreamer(t *testing.T) {
 	Convey("Should trim the base path", t, func() {
 		Convey("Up to the first glob", func() {
 			p := []string{filepath.Join(tmpDir, "nested", "markdown", "*.md")}
-			s := SrcStreamer(p, SrcOpts{}).Stream
+			s := NewSrcStreamer(p...).Stream
 			var count int
 			var lastFi *FileInfo
 			for fi, _, err := s(nil, nil); fi != nil; fi, _, err = s(nil, nil) {
