@@ -14,7 +14,7 @@ import (
 type Handler func()
 type ErrorHandler func() error
 type ContextHandler func(Ctx *interface{}) error
-type StreamHandler func() (*Stream, error)
+type StreamHandler func() Streamer
 
 var DefaultTasker *Tasker = NewTasker()
 
@@ -74,8 +74,8 @@ func (tr *Tasker) Task(n string, args ...interface{}) error {
 		case "func() error":
 			er = v.Interface().(func() error)
 			break
-		case "func() (*muta.Stream, error)":
-			sh = v.Interface().(func() (*Stream, error))
+		case "func() muta.Streamer":
+			sh = v.Interface().(func() Streamer)
 			break
 		case "func(*interface {}) error":
 			ch = v.Interface().(func(*interface{}) error)
@@ -125,24 +125,42 @@ func (tr *Tasker) RunTask(tn string) (err error) {
 		}
 	}
 
-	if t.Handler != nil {
+	switch {
+	case t.Handler != nil:
 		t.Handler()
-	} else if t.ErrorHandler != nil {
+
+	case t.ErrorHandler != nil:
 		return t.ErrorHandler()
-	} else if t.StreamHandler != nil {
-		var s *Stream
-		s, err = t.StreamHandler()
+
+	case t.ContextHandler != nil:
+		return errors.New("Not implemented")
+
+	case t.StreamHandler != nil:
+		s := t.StreamHandler()
 		if err != nil {
 			return err
 		}
-		if s != nil {
-			err = s.Start()
+
+		for {
+			fi, r, err := s.Next()
+
+			// If a readcloser was returned, close it.
+			if r != nil {
+				r.Close()
+			}
+
+			// If an error was returned, bail out of the loop and return the
+			// error.
 			if err != nil {
 				return err
 			}
+
+			// When fi is nil, no Streamer's are returning anymore files.
+			// Exit the loop.
+			if fi == nil {
+				break
+			}
 		}
-	} else if t.ContextHandler != nil {
-		return errors.New("Not implemented")
 	}
 
 	return nil

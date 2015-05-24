@@ -40,7 +40,7 @@ func TestTaskerTask(t *testing.T) {
 
 	Convey("Should add a StreamHandler task", t, func() {
 		ta := NewTasker()
-		task := func() (*Stream, error) { return nil, nil }
+		task := func() Streamer { return nil }
 		err := ta.Task("a", task)
 		So(err, ShouldBeNil)
 		So(ta.Tasks["a"].StreamHandler, ShouldEqual, task)

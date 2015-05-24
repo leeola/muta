@@ -1,7 +1,7 @@
 //
 // # General utility funcs
 //
-package utils
+package mutil
 
 // Check if a string slice contains the given string
 func ContainsString(ss []string, s string) bool {
