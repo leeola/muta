@@ -47,11 +47,11 @@ func TestSrcStreamerNext(t *testing.T) {
 	Convey("With previous Streamers", t, func() {
 		Convey("the files should be loaded in order", func() {
 			as := (&MockStreamer{
-				Mocks: []string{"foo", "bar"},
+				Files: []string{"foo", "bar"},
 			})
 			bs := (&MockStreamer{
 				Streamer: as,
-				Mocks:    []string{"baz", "bat"},
+				Files:    []string{"baz", "bat"},
 			})
 			s := &SrcStreamer{
 				Streamer: bs,

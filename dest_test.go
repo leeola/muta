@@ -68,7 +68,7 @@ func TestDestStreamerNext(t *testing.T) {
 
 	Convey("Should create the file in the destination", t, func() {
 		s := &DestStreamer{
-			Streamer:    &MockStreamer{Mocks: []string{"file"}},
+			Streamer:    &MockStreamer{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts: DestOpts{
 				Clean: false, Overwrite: false},
@@ -84,7 +84,7 @@ func TestDestStreamerNext(t *testing.T) {
 
 	Convey("Should write all Read data to the file", t, func() {
 		s := &DestStreamer{
-			Streamer:    &MockStreamer{Mocks: []string{"file"}},
+			Streamer:    &MockStreamer{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},
 		}
@@ -100,7 +100,7 @@ func TestDestStreamerNext(t *testing.T) {
 
 	Convey("Should write all Read data to the file, repeatedly", t, func() {
 		s := &DestStreamer{
-			Streamer:    &MockStreamer{Mocks: []string{"file1", "file2"}},
+			Streamer:    &MockStreamer{Files: []string{"file1", "file2"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},
 		}
@@ -123,7 +123,7 @@ func TestDestStreamerNext(t *testing.T) {
 
 	Convey("Should overwrite all Read data to the file, if set", t, func() {
 		s := &DestStreamer{
-			Streamer:    &MockStreamer{Mocks: []string{"file"}},
+			Streamer:    &MockStreamer{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: true},
 		}
@@ -140,7 +140,7 @@ func TestDestStreamerNext(t *testing.T) {
 
 	Convey("Should not overwrite all Read data to the file, if not set", t, func() {
 		s := &DestStreamer{
-			Streamer:    &MockStreamer{Mocks: []string{"file"}},
+			Streamer:    &MockStreamer{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},
 		}
@@ -156,7 +156,7 @@ func TestDestStreamerNext(t *testing.T) {
 	Convey("Should create the file path in the destination", t, func() {
 		s := &DestStreamer{
 			Streamer: &MockStreamer{
-				Mocks: []string{filepath.Join("path", "path_file")}},
+				Files: []string{filepath.Join("path", "path_file")}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},
 		}
