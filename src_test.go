@@ -4,8 +4,7 @@ import (
 	"io/ioutil"
 	"path/filepath"
 	"testing"
-)
-import (
+
 	"github.com/leeola/muta/logging"
 	. "github.com/smartystreets/goconvey/convey"
 )

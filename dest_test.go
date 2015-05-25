@@ -6,9 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
-)
-import (
-	//"github.com/leeola/muta/mtesting"
+
 	"github.com/leeola/muta/logging"
 	. "github.com/smartystreets/goconvey/convey"
 )
