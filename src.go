@@ -14,7 +14,7 @@ const srcPluginName string = "muta.Src"
 // globsToBase, will take a series of globs and find the base among
 // all of the given globs.
 //
-// For an use-case understanding of this func, see the SrcStreamer.Base
+// For an use-case understanding of this func, see the SrcStream.Base
 // docstring.
 //
 // this func will be moved into it's own Package, and probably it's own
@@ -45,15 +45,15 @@ func globsToBase(globs ...string) string {
 	return base
 }
 
-// Return a new SrcStreamer instance. If you need a Use() able version of
+// Return a new SrcStream instance. If you need a Use() able version of
 // Src, see UsableSrc()
 func Src(paths ...string) Streamer {
-	return (&SrcStreamer{Sources: paths}).init()
+	return (&SrcStream{Sources: paths}).init()
 }
 
 func UsableSrc(paths ...string) StreamEmbedder {
 	return StreamEmbedderFunc(func(inner Streamer) Streamer {
-		s := &SrcStreamer{
+		s := &SrcStream{
 			Streamer: inner,
 			Sources:  paths,
 		}
@@ -61,12 +61,12 @@ func UsableSrc(paths ...string) StreamEmbedder {
 	})
 }
 
-type SrcStreamer struct {
+type SrcStream struct {
 	// The optional inner Streamer.
 	Streamer
 
 	// The base directory that will be trimmed from the output path.
-	// For example, `SrcStreamer("foo/bar/baz")` would set a Base of
+	// For example, `SrcStream("foo/bar/baz")` would set a Base of
 	// `"foo/bar"`, so that the FileInfo has a Path of `.`. Trimming
 	// `"foo/bar"` from the Path. You can override this, by setting
 	// this value manually.
@@ -76,7 +76,7 @@ type SrcStreamer struct {
 	Sources []string
 }
 
-func (s *SrcStreamer) init() *SrcStreamer {
+func (s *SrcStream) init() *SrcStream {
 	// Clean the paths to remove any oddities (before setting opts)
 	for i, p := range s.Sources {
 		s.Sources[i] = filepath.Clean(p)
@@ -89,11 +89,11 @@ func (s *SrcStreamer) init() *SrcStreamer {
 	return s
 }
 
-func (s *SrcStreamer) Use(embedder StreamEmbedder) Streamer {
+func (s *SrcStream) Use(embedder StreamEmbedder) Streamer {
 	return embedder.Embed(s)
 }
 
-func (s *SrcStreamer) Next() (*FileInfo, io.ReadCloser, error) {
+func (s *SrcStream) Next() (*FileInfo, io.ReadCloser, error) {
 	if s.Streamer != nil {
 		if fi, r, err := s.Streamer.Next(); fi != nil || err != nil {
 			return fi, r, nil

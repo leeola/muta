@@ -59,14 +59,14 @@ func TestDestWithOpts(t *testing.T) {
 	})
 }
 
-func TestDestStreamerNext(t *testing.T) {
+func TestDestStreamNext(t *testing.T) {
 	tmpDir := filepath.Join("_test", "tmp")
 
 	os.RemoveAll(filepath.Join(tmpDir, "file"))
 
 	Convey("Should create the file in the destination", t, func() {
-		s := &DestStreamer{
-			Streamer:    &MockStreamer{Files: []string{"file"}},
+		s := &DestStream{
+			Streamer:    &MockStream{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts: DestOpts{
 				Clean: false, Overwrite: false},
@@ -81,8 +81,8 @@ func TestDestStreamerNext(t *testing.T) {
 	os.RemoveAll(filepath.Join(tmpDir, "file"))
 
 	Convey("Should write all Read data to the file", t, func() {
-		s := &DestStreamer{
-			Streamer:    &MockStreamer{Files: []string{"file"}},
+		s := &DestStream{
+			Streamer:    &MockStream{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},
 		}
@@ -97,8 +97,8 @@ func TestDestStreamerNext(t *testing.T) {
 	os.RemoveAll(filepath.Join(tmpDir, "file2"))
 
 	Convey("Should write all Read data to the file, repeatedly", t, func() {
-		s := &DestStreamer{
-			Streamer:    &MockStreamer{Files: []string{"file1", "file2"}},
+		s := &DestStream{
+			Streamer:    &MockStream{Files: []string{"file1", "file2"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},
 		}
@@ -120,8 +120,8 @@ func TestDestStreamerNext(t *testing.T) {
 		[]byte("REPLACE ME"), 0777)
 
 	Convey("Should overwrite all Read data to the file, if set", t, func() {
-		s := &DestStreamer{
-			Streamer:    &MockStreamer{Files: []string{"file"}},
+		s := &DestStream{
+			Streamer:    &MockStream{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: true},
 		}
@@ -137,8 +137,8 @@ func TestDestStreamerNext(t *testing.T) {
 		[]byte("DON'T REPLACE ME"), 0777)
 
 	Convey("Should not overwrite all Read data to the file, if not set", t, func() {
-		s := &DestStreamer{
-			Streamer:    &MockStreamer{Files: []string{"file"}},
+		s := &DestStream{
+			Streamer:    &MockStream{Files: []string{"file"}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},
 		}
@@ -152,8 +152,8 @@ func TestDestStreamerNext(t *testing.T) {
 	os.RemoveAll(filepath.Join(tmpDir, "path"))
 
 	Convey("Should create the file path in the destination", t, func() {
-		s := &DestStreamer{
-			Streamer: &MockStreamer{
+		s := &DestStream{
+			Streamer: &MockStream{
 				Files: []string{filepath.Join("path", "path_file")}},
 			Destination: tmpDir,
 			Opts:        DestOpts{Clean: false, Overwrite: false},

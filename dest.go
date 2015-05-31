@@ -28,7 +28,7 @@ type DestOpts struct {
 	Overwrite bool
 }
 
-// Return a DestStreamer{} Embedder, with the following default options:
+// Return a DestStream{} Embedder, with the following default options:
 //
 //		DestOpts{
 //			Clean:     false,
@@ -42,7 +42,7 @@ func Dest(d string) StreamEmbedder {
 	return DestWithOpts(d, opts)
 }
 
-// Return a DestStreamer{} Embedder, with the given options. If
+// Return a DestStream{} Embedder, with the given options. If
 // DestOpts.Clean is true, remove the entire Destination directory before
 // creating the Streamer.
 func DestWithOpts(d string, opts DestOpts) StreamEmbedder {
@@ -61,7 +61,7 @@ func DestWithOpts(d string, opts DestOpts) StreamEmbedder {
 				destPluginName, err.Error()))
 		}
 
-		return &DestStreamer{
+		return &DestStream{
 			Streamer:    inner,
 			Destination: d,
 			Opts:        opts,
@@ -69,7 +69,7 @@ func DestWithOpts(d string, opts DestOpts) StreamEmbedder {
 	})
 }
 
-type DestStreamer struct {
+type DestStream struct {
 	// The inner streamer, which provides files for Dest to consume & write
 	Streamer
 
@@ -77,11 +77,11 @@ type DestStreamer struct {
 	Opts        DestOpts
 }
 
-func (s *DestStreamer) Use(embedder StreamEmbedder) Streamer {
+func (s *DestStream) Use(embedder StreamEmbedder) Streamer {
 	return embedder.Embed(s)
 }
 
-func (s *DestStreamer) Next() (*FileInfo, io.ReadCloser, error) {
+func (s *DestStream) Next() (*FileInfo, io.ReadCloser, error) {
 	// If Dest doesn't have an embedded Streamer do nothing.
 	if s.Streamer == nil {
 		return nil, nil, nil

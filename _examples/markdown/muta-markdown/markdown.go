@@ -14,19 +14,19 @@ import (
 
 func Markdown() muta.StreamEmbedder {
 	return muta.StreamEmbedderFunc(func(inner muta.Streamer) muta.Streamer {
-		return &MarkdownStreamer{inner}
+		return &MarkdownStream{inner}
 	})
 }
 
-type MarkdownStreamer struct {
+type MarkdownStream struct {
 	muta.Streamer
 }
 
-func (s *MarkdownStreamer) Use(embedder muta.StreamEmbedder) muta.Streamer {
+func (s *MarkdownStream) Use(embedder muta.StreamEmbedder) muta.Streamer {
 	return embedder.Embed(s)
 }
 
-func (s *MarkdownStreamer) Next() (*muta.FileInfo, io.ReadCloser, error) {
+func (s *MarkdownStream) Next() (*muta.FileInfo, io.ReadCloser, error) {
 	// We don't generate files, so no need to ever do anything if we don't
 	// have an inner Streamer.
 	if s.Streamer == nil {

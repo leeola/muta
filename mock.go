@@ -19,7 +19,7 @@ import (
 //
 // TODO: Find a way to move this into the `muta/mtesting` package. The
 // problem is that if this is in `muta/mtesting`, then the signature of
-// MockStreamer.Next becomes `Next() (*muta.FileInfo ...)`. SrcStreamer
+// MockStream.Next becomes `Next() (*muta.FileInfo ...)`. SrcStreamer
 // and DestStreamer however, require that the signature of any locally
 // embedded library is `Next() (*FileInfo ...)` instead.
 //
@@ -29,7 +29,7 @@ import (
 // `muta.FileInfo`, and so on.
 //
 // I could be way off base though - i'm not sure what to do here.
-type MockStreamer struct {
+type MockStream struct {
 	Streamer
 
 	// A slice of the file names to generate. If no Content is provided,
@@ -49,11 +49,11 @@ type MockStreamer struct {
 	Contents []string
 }
 
-func (s *MockStreamer) Use(embedder StreamEmbedder) Streamer {
+func (s *MockStream) Use(embedder StreamEmbedder) Streamer {
 	return embedder.Embed(s)
 }
 
-func (s *MockStreamer) Next() (fi *FileInfo, rc io.ReadCloser, err error) {
+func (s *MockStream) Next() (fi *FileInfo, rc io.ReadCloser, err error) {
 	if s.Streamer != nil {
 		fi, rc, err = s.Streamer.Next()
 		if fi != nil {
@@ -86,7 +86,7 @@ func (s *MockStreamer) Next() (fi *FileInfo, rc io.ReadCloser, err error) {
 	// for this file.
 	if strings.HasPrefix(content, "error: ") {
 		err = errors.New(fmt.Sprintf(
-			"MockStreamer Mock Error: %s",
+			"MockStream Mock Error: %s",
 			strings.TrimLeft(content, "error: ")))
 	}
 	return

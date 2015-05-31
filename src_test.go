@@ -26,12 +26,12 @@ func TestGlobsToBase(t *testing.T) {
 	})
 }
 
-func TestSrcStreamerNext(t *testing.T) {
+func TestSrcStreamNext(t *testing.T) {
 	tmpDir := filepath.Join("_test", "fixtures")
 
 	Convey("With no previous Streamers", t, func() {
 		Convey("It should load its own files right away", func() {
-			s := &SrcStreamer{
+			s := &SrcStream{
 				Sources: []string{filepath.Join(tmpDir, "hello")},
 			}
 			fi, r, err := s.Next()
@@ -45,14 +45,14 @@ func TestSrcStreamerNext(t *testing.T) {
 
 	Convey("With previous Streamers", t, func() {
 		Convey("the files should be loaded in order", func() {
-			as := (&MockStreamer{
+			as := (&MockStream{
 				Files: []string{"foo", "bar"},
 			})
-			bs := (&MockStreamer{
+			bs := (&MockStream{
 				Streamer: as,
 				Files:    []string{"baz", "bat"},
 			})
-			s := &SrcStreamer{
+			s := &SrcStream{
 				Streamer: bs,
 				Sources:  []string{filepath.Join(tmpDir, "hello")},
 			}
