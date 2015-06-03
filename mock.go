@@ -6,10 +6,8 @@
 package muta
 
 import (
-	"errors"
 	"fmt"
 	"io"
-	"strings"
 
 	"github.com/leeola/muta/mutil"
 )
@@ -41,12 +39,11 @@ type MockStream struct {
 	// Shifted off one by one in the same order as files. If, after the slice
 	// is empty, there are still more files, the contents are automatically
 	// created as `<filename> content`.
-	//
-	// Additionally, if the contents of a file begin with `error: ` then
-	// an error is returned for that file, with any remaining characters
-	// of the content string. This allows you to mock errors, from a
-	// Streamer as well.
 	Contents []string
+
+	// An optional slice of errors, to be matched up in the same way Contents
+	// are matched to Files.
+	Errors []error
 }
 
 func (s *MockStream) Use(embedder StreamEmbedder) Streamer {
@@ -67,27 +64,22 @@ func (s *MockStream) Next() (fi *FileInfo, rc io.ReadCloser, err error) {
 
 	file := s.Files[0]
 	s.Files = s.Files[1:]
+	fi = NewFileInfo(file)
 
 	// Shift content off of the list if there is any, or create content
 	// if there isn't any. Note that we don't check for an empty string,
 	// which lets you pass an "empty" file with `Contents: []string{""}`
-	var content string
 	if len(s.Contents) > 0 {
-		content = s.Contents[0]
+		rc = mutil.ByteCloser([]byte(s.Contents[0]))
 		s.Contents = s.Contents[1:]
 	} else {
-		content = fmt.Sprintf("%s content", file)
+		rc = mutil.ByteCloser([]byte(fmt.Sprintf("%s content", file)))
 	}
 
-	fi = NewFileInfo(file)
-	rc = mutil.ByteCloser([]byte(content))
-
-	// If the mock content starts with `error: `, return an error
-	// for this file.
-	if strings.HasPrefix(content, "error: ") {
-		err = errors.New(fmt.Sprintf(
-			"MockStream Mock Error: %s",
-			strings.TrimLeft(content, "error: ")))
+	if len(s.Errors) > 0 {
+		err = s.Errors[0]
+		s.Errors = s.Errors[1:]
 	}
+
 	return
 }
