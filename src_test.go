@@ -26,17 +26,17 @@ func TestGlobsToBase(t *testing.T) {
 	})
 }
 
-func TestSrcStreamNext(t *testing.T) {
+func TestSrcStreamerNext(t *testing.T) {
 	tmpDir := filepath.Join("_test", "fixtures")
 
 	Convey("With no previous Streamers", t, func() {
 		Convey("It should load its own files right away", func() {
-			s := &SrcStream{
+			s := &SrcStreamer{
 				Sources: []string{filepath.Join(tmpDir, "hello")},
 			}
-			fi, r, err := s.Next()
+			fi, r, err := s.Next(nil, nil)
 			So(err, ShouldBeNil)
-			So(fi.Name, ShouldEqual, "hello")
+			So(fi.Name(), ShouldEqual, "hello")
 			b, _ := ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "hello")
 			r.Close()
@@ -45,44 +45,44 @@ func TestSrcStreamNext(t *testing.T) {
 
 	Convey("With previous Streamers", t, func() {
 		Convey("the files should be loaded in order", func() {
-			as := (&MockStream{
-				Files: []string{"foo", "bar"},
-			})
-			bs := (&MockStream{
-				Streamer: as,
-				Files:    []string{"baz", "bat"},
-			})
-			s := &SrcStream{
-				Streamer: bs,
-				Sources:  []string{filepath.Join(tmpDir, "hello")},
+			s := Stream{
+				&MockStreamer{
+					Files: []string{"foo", "bar"},
+				},
+				&MockStreamer{
+					Files: []string{"baz", "bat"},
+				},
+				&SrcStreamer{
+					Sources: []string{filepath.Join(tmpDir, "hello")},
+				},
 			}
-			fi, r, err := s.Next()
+			fi, r, err := s.Next(nil, nil)
 			So(err, ShouldBeNil)
-			So(fi.Name, ShouldEqual, "foo")
+			So(fi.Name(), ShouldEqual, "foo")
 			b, _ := ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "foo content")
 
-			fi, r, err = s.Next()
+			fi, r, err = s.Next(nil, nil)
 			So(err, ShouldBeNil)
-			So(fi.Name, ShouldEqual, "bar")
+			So(fi.Name(), ShouldEqual, "bar")
 			b, _ = ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "bar content")
 
-			fi, r, err = s.Next()
+			fi, r, err = s.Next(nil, nil)
 			So(err, ShouldBeNil)
-			So(fi.Name, ShouldEqual, "baz")
+			So(fi.Name(), ShouldEqual, "baz")
 			b, _ = ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "baz content")
 
-			fi, r, err = s.Next()
+			fi, r, err = s.Next(nil, nil)
 			So(err, ShouldBeNil)
-			So(fi.Name, ShouldEqual, "bat")
+			So(fi.Name(), ShouldEqual, "bat")
 			b, _ = ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "bat content")
 
-			fi, r, err = s.Next()
+			fi, r, err = s.Next(nil, nil)
 			So(err, ShouldBeNil)
-			So(fi.Name, ShouldEqual, "hello")
+			So(fi.Name(), ShouldEqual, "hello")
 			b, _ = ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "hello")
 			r.Close()

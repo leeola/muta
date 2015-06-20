@@ -22,7 +22,7 @@ func TestDestWithOpts(t *testing.T) {
 
 	Convey("Should create the destination if needed", t, func() {
 		DestWithOpts(filepath.Join(tmpDir, "dest"), DestOpts{
-			Clean: false, Overwrite: false}).Embed(nil)
+			Clean: false, Overwrite: false})
 		osFi, err := os.Stat(filepath.Join(tmpDir, "dest"))
 		So(err, ShouldBeNil)
 		So(osFi.IsDir(), ShouldBeTrue)
@@ -33,7 +33,7 @@ func TestDestWithOpts(t *testing.T) {
 
 	Convey("Should remove the destination if Clean is true", t, func() {
 		DestWithOpts(filepath.Join(tmpDir, "dest"), DestOpts{
-			Clean: true, Overwrite: false}).Embed(nil)
+			Clean: true, Overwrite: false})
 		osFi, err := os.Stat(filepath.Join(tmpDir, "dest"))
 		So(err, ShouldBeNil)
 		So(osFi.IsDir(), ShouldBeTrue)
@@ -48,7 +48,7 @@ func TestDestWithOpts(t *testing.T) {
 
 	Convey("Should not remove the destination if Clean isnt set", t, func() {
 		DestWithOpts(filepath.Join(tmpDir, "dest"), DestOpts{
-			Clean: false, Overwrite: false}).Embed(nil)
+			Clean: false, Overwrite: false})
 		osFi, err := os.Stat(filepath.Join(tmpDir, "dest"))
 		So(err, ShouldBeNil)
 		So(osFi.IsDir(), ShouldBeTrue)
@@ -59,20 +59,24 @@ func TestDestWithOpts(t *testing.T) {
 	})
 }
 
-func TestDestStreamNext(t *testing.T) {
+func TestDestStreamerNext(t *testing.T) {
 	tmpDir := filepath.Join("_test", "tmp")
 
 	os.RemoveAll(filepath.Join(tmpDir, "file"))
 
 	Convey("Should create the file in the destination", t, func() {
-		s := &DestStream{
-			Streamer:    &MockStream{Files: []string{"file"}},
-			Destination: tmpDir,
-			Opts: DestOpts{
-				Clean: false, Overwrite: false},
+		s := Stream{
+			&MockStreamer{Files: []string{"file"}},
+			&DestStreamer{
+				Destination: tmpDir,
+				Opts: DestOpts{
+					Clean: false, Overwrite: false},
+			},
 		}
-		_, _, err := s.Next()
+
+		_, _, err := s.Next(nil, nil)
 		So(err, ShouldBeNil)
+		// TODO: I think this is a bug. Investigate
 		osFi, err := os.Stat(filepath.Join(tmpDir, "dest", "file"))
 		So(err, ShouldBeNil)
 		So(osFi.IsDir(), ShouldBeFalse)
@@ -81,12 +85,15 @@ func TestDestStreamNext(t *testing.T) {
 	os.RemoveAll(filepath.Join(tmpDir, "file"))
 
 	Convey("Should write all Read data to the file", t, func() {
-		s := &DestStream{
-			Streamer:    &MockStream{Files: []string{"file"}},
-			Destination: tmpDir,
-			Opts:        DestOpts{Clean: false, Overwrite: false},
+		s := Stream{
+			&MockStreamer{Files: []string{"file"}},
+			&DestStreamer{
+				Destination: tmpDir,
+				Opts:        DestOpts{Clean: false, Overwrite: false},
+			},
 		}
-		_, _, err := s.Next()
+
+		_, _, err := s.Next(nil, nil)
 		So(err, ShouldBeNil)
 		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
 		So(err, ShouldBeNil)
@@ -97,18 +104,21 @@ func TestDestStreamNext(t *testing.T) {
 	os.RemoveAll(filepath.Join(tmpDir, "file2"))
 
 	Convey("Should write all Read data to the file, repeatedly", t, func() {
-		s := &DestStream{
-			Streamer:    &MockStream{Files: []string{"file1", "file2"}},
-			Destination: tmpDir,
-			Opts:        DestOpts{Clean: false, Overwrite: false},
+		s := Stream{
+			&MockStreamer{Files: []string{"file1", "file2"}},
+			&DestStreamer{
+				Destination: tmpDir,
+				Opts:        DestOpts{Clean: false, Overwrite: false},
+			},
 		}
-		_, _, err := s.Next()
+
+		_, _, err := s.Next(nil, nil)
 		So(err, ShouldBeNil)
 		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file1"))
 		So(err, ShouldBeNil)
 		So(string(b), ShouldEqual, "file1 content")
 
-		_, _, err = s.Next()
+		_, _, err = s.Next(nil, nil)
 		So(err, ShouldBeNil)
 		b, err = ioutil.ReadFile(filepath.Join(tmpDir, "file2"))
 		So(err, ShouldBeNil)
@@ -120,12 +130,15 @@ func TestDestStreamNext(t *testing.T) {
 		[]byte("REPLACE ME"), 0777)
 
 	Convey("Should overwrite all Read data to the file, if set", t, func() {
-		s := &DestStream{
-			Streamer:    &MockStream{Files: []string{"file"}},
-			Destination: tmpDir,
-			Opts:        DestOpts{Clean: false, Overwrite: true},
+		s := Stream{
+			&MockStreamer{Files: []string{"file"}},
+			&DestStreamer{
+				Destination: tmpDir,
+				Opts:        DestOpts{Clean: false, Overwrite: true},
+			},
 		}
-		_, _, err := s.Next()
+
+		_, _, err := s.Next(nil, nil)
 		So(err, ShouldBeNil)
 		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
 		So(err, ShouldBeNil)
@@ -137,12 +150,15 @@ func TestDestStreamNext(t *testing.T) {
 		[]byte("DON'T REPLACE ME"), 0777)
 
 	Convey("Should not overwrite all Read data to the file, if not set", t, func() {
-		s := &DestStream{
-			Streamer:    &MockStream{Files: []string{"file"}},
-			Destination: tmpDir,
-			Opts:        DestOpts{Clean: false, Overwrite: false},
+		s := Stream{
+			&MockStreamer{Files: []string{"file"}},
+			&DestStreamer{
+				Destination: tmpDir,
+				Opts:        DestOpts{Clean: false, Overwrite: false},
+			},
 		}
-		_, _, err := s.Next()
+
+		_, _, err := s.Next(nil, nil)
 		So(err, ShouldNotBeNil)
 		b, err := ioutil.ReadFile(filepath.Join(tmpDir, "file"))
 		So(err, ShouldBeNil)
@@ -152,13 +168,16 @@ func TestDestStreamNext(t *testing.T) {
 	os.RemoveAll(filepath.Join(tmpDir, "path"))
 
 	Convey("Should create the file path in the destination", t, func() {
-		s := &DestStream{
-			Streamer: &MockStream{
+		s := Stream{
+			&MockStreamer{
 				Files: []string{filepath.Join("path", "path_file")}},
-			Destination: tmpDir,
-			Opts:        DestOpts{Clean: false, Overwrite: false},
+			&DestStreamer{
+				Destination: tmpDir,
+				Opts:        DestOpts{Clean: false, Overwrite: false},
+			},
 		}
-		_, _, err := s.Next()
+
+		_, _, err := s.Next(nil, nil)
 		So(err, ShouldBeNil)
 
 		osFi, err := os.Stat(filepath.Join(tmpDir, "path"))

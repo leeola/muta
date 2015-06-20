@@ -14,11 +14,9 @@ const srcPluginName string = "muta.Src"
 // globsToBase, will take a series of globs and find the base among
 // all of the given globs.
 //
-// For an use-case understanding of this func, see the SrcStream.Base
+// For a use-case understanding of this func, see the SrcStreamer.Base
 // docstring.
 //
-// this func will be moved into it's own Package, and probably it's own
-// repo in the future
 // Note that we're just supporting the * glob star currently, as i believe
 // that's the only supported glob pattern, from the official lib.
 func globsToBase(globs ...string) string {
@@ -45,28 +43,20 @@ func globsToBase(globs ...string) string {
 	return base
 }
 
-// Return a new SrcStream instance. If you need a Use() able version of
-// Src, see UsableSrc()
-func Src(paths ...string) Streamer {
-	return (&SrcStream{Sources: paths}).init()
+// Return a new Stream, with a SrcStreamer. If you need a Pipe()able
+// version of Src, see PipeableSrc()
+func Src(paths ...string) Stream {
+	return []Streamer{PipeableSrc(paths...)}
 }
 
-func UsableSrc(paths ...string) StreamEmbedder {
-	return StreamEmbedderFunc(func(inner Streamer) Streamer {
-		s := &SrcStream{
-			Streamer: inner,
-			Sources:  paths,
-		}
-		return s.init()
-	})
+// PipeableSrc
+func PipeableSrc(paths ...string) *SrcStreamer {
+	return (&SrcStreamer{Sources: paths}).init()
 }
 
-type SrcStream struct {
-	// The optional inner Streamer.
-	Streamer
-
+type SrcStreamer struct {
 	// The base directory that will be trimmed from the output path.
-	// For example, `SrcStream("foo/bar/baz")` would set a Base of
+	// For example, `SrcStreamer("foo/bar/baz")` would set a Base of
 	// `"foo/bar"`, so that the FileInfo has a Path of `.`. Trimming
 	// `"foo/bar"` from the Path. You can override this, by setting
 	// this value manually.
@@ -76,7 +66,7 @@ type SrcStream struct {
 	Sources []string
 }
 
-func (s *SrcStream) init() *SrcStream {
+func (s *SrcStreamer) init() *SrcStreamer {
 	// Clean the paths to remove any oddities (before setting opts)
 	for i, p := range s.Sources {
 		s.Sources[i] = filepath.Clean(p)
@@ -89,17 +79,16 @@ func (s *SrcStream) init() *SrcStream {
 	return s
 }
 
-func (s *SrcStream) Use(embedder StreamEmbedder) Streamer {
-	return embedder.Embed(s)
-}
+func (s *SrcStreamer) Next(fi FileInfo, rc io.ReadCloser) (FileInfo,
+	io.ReadCloser, error) {
 
-func (s *SrcStream) Next() (*FileInfo, io.ReadCloser, error) {
-	if s.Streamer != nil {
-		if fi, r, err := s.Streamer.Next(); fi != nil || err != nil {
-			return fi, r, nil
-		}
+	// If file's are incoming, return them. Src does not need to
+	// modify them.
+	if fi != nil {
+		return fi, rc, nil
 	}
 
+	// If there are no source files to generate, return nil.
 	if len(s.Sources) == 0 {
 		return nil, nil, nil
 	}
@@ -117,10 +106,10 @@ func (s *SrcStream) Next() (*FileInfo, io.ReadCloser, error) {
 	p := s.Sources[0]
 	s.Sources = s.Sources[1:]
 
-	fi := NewFileInfo(p)
-	fi.Path = strings.TrimPrefix(fi.Path, s.Base)
-	if fi.Path == "" {
-		fi.Path = "."
+	fi = NewFileInfo(p)
+	fi.SetPath(strings.TrimPrefix(fi.Path(), s.Base))
+	if fi.Path() == "" {
+		fi.SetPath(".")
 	}
 
 	logging.Debug([]string{srcPluginName}, "Opening", p)

@@ -17,7 +17,7 @@ import (
 //
 // TODO: Find a way to move this into the `muta/mtesting` package. The
 // problem is that if this is in `muta/mtesting`, then the signature of
-// MockStream.Next becomes `Next() (*muta.FileInfo ...)`. SrcStreamer
+// MockStreamer.Next becomes `Next() (*muta.FileInfo ...)`. SrcStreamer
 // and DestStreamer however, require that the signature of any locally
 // embedded library is `Next() (*FileInfo ...)` instead.
 //
@@ -27,9 +27,7 @@ import (
 // `muta.FileInfo`, and so on.
 //
 // I could be way off base though - i'm not sure what to do here.
-type MockStream struct {
-	Streamer
-
+type MockStreamer struct {
 	// A slice of the file names to generate. If no Content is provided,
 	// for an individual file (eg, if there are 5 files, but 4 contents)
 	// the content will be automatically created as `<filename> content`
@@ -46,16 +44,13 @@ type MockStream struct {
 	Errors []error
 }
 
-func (s *MockStream) Use(embedder StreamEmbedder) Streamer {
-	return embedder.Embed(s)
-}
+func (s *MockStreamer) Next(inFi FileInfo, inRc io.ReadCloser) (
+	fi FileInfo, rc io.ReadCloser, err error) {
 
-func (s *MockStream) Next() (fi *FileInfo, rc io.ReadCloser, err error) {
-	if s.Streamer != nil {
-		fi, rc, err = s.Streamer.Next()
-		if fi != nil {
-			return
-		}
+	fi = inFi
+	rc = inRc
+	if fi != nil {
+		return
 	}
 
 	if len(s.Files) == 0 {
