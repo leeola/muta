@@ -19,6 +19,15 @@ func Markdown() muta.Streamer {
 type MarkdownStreamer struct {
 }
 
+// The Next() method is the (only) workhorse of a Streamer. The Stream
+// will call it with a FileInfo and a ReadCloser, expecting the Next()
+// method to modify them as it sees fit.
+//
+// If no FileInfo is provided, the Next() method is expected to create
+// new files and return them - or return nothing and not be called again.
+//
+// Next() will always be called once more if it returns a file, unless
+// it returns an error.
 func (s *MarkdownStreamer) Next(fi muta.FileInfo, rc io.ReadCloser) (
 	muta.FileInfo, io.ReadCloser, error) {
 
