@@ -12,54 +12,49 @@ import (
 	"github.com/russross/blackfriday"
 )
 
-func Markdown() muta.StreamEmbedder {
-	return muta.StreamEmbedderFunc(func(inner muta.Streamer) muta.Streamer {
-		return &MarkdownStream{inner}
-	})
+func Markdown() muta.Streamer {
+	return &MarkdownStreamer{}
 }
 
-type MarkdownStream struct {
-	muta.Streamer
+type MarkdownStreamer struct {
 }
 
-func (s *MarkdownStream) Use(embedder muta.StreamEmbedder) muta.Streamer {
-	return embedder.Embed(s)
-}
+func (s *MarkdownStreamer) Next(fi muta.FileInfo, rc io.ReadCloser) (
+	muta.FileInfo, io.ReadCloser, error) {
 
-func (s *MarkdownStream) Next() (*muta.FileInfo, io.ReadCloser, error) {
-	// We don't generate files, so no need to ever do anything if we don't
-	// have an inner Streamer.
-	if s.Streamer == nil {
-		return nil, nil, nil
-	}
-
-	fi, r, err := s.Streamer.Next()
-	if fi == nil || err != nil {
-		return fi, r, err
+	// MarkdownStreamer does not create any files, so if no files are
+	// given to it, just return.
+	if fi == nil {
+		return fi, rc, nil
 	}
 
 	// If the file isn't markdown, we don't care about it. Return it
 	// unmodified.
-	if filepath.Ext(fi.Name) != ".md" {
-		return fi, r, err
+	if filepath.Ext(fi.Name()) != ".md" {
+		return fi, rc, nil
 	}
 
 	// Since the file is markdown, read it all so we can convert it to
 	// markdown.
-	markdown, err := ioutil.ReadAll(r)
-	defer r.Close()
+	markdown, err := ioutil.ReadAll(rc)
+	defer rc.Close()
 	if err != nil {
-		return fi, r, err
+		return fi, rc, err
 	}
 
 	// Rename the file to HTML
-	fi.Name = fmt.Sprintf("%s.html",
-		strings.TrimSuffix(fi.Name, filepath.Ext(fi.Name)))
+	fi.SetName(fmt.Sprintf("%s.html",
+		strings.TrimSuffix(fi.Name(), filepath.Ext(fi.Name())),
+	))
 
+	// Use Blackfriday to create our Markdown
 	html := blackfriday.MarkdownBasic(markdown)
 
-	// Now return it all, with a ReadCloser for the html. Note that
-	// the byte array is being returned as a bytes.Reader, with a fake
-	// Close() method, via the mutil.ByteCloser() func.
-	return fi, mutil.ByteCloser(html), nil
+	// ByteCloser() is a muta utility function that takes a byte array, and
+	// returns a fake ReadCloser. This is needed to satisfy the Streamer
+	// interface.
+	rc = mutil.ByteCloser(html)
+
+	// Now return it all, for subsequent plugins to modify, write to file, etc.
+	return fi, rc, nil
 }
