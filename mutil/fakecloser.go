@@ -3,6 +3,7 @@ package mutil
 import (
 	"bytes"
 	"io"
+	"strings"
 )
 
 // The fakeReadClose struct provides us with a way to implement a
@@ -31,4 +32,10 @@ func ByteCloser(b []byte) io.ReadCloser {
 // method.
 func ReadCloser(r io.Reader) io.ReadCloser {
 	return &fakeReadClose{r}
+}
+
+// Take in a string, and return an io.ReadCloser compatible
+// string.Reader.
+func StringCloser(s string) io.ReadCloser {
+	return ReadCloser(strings.NewReader(s))
 }

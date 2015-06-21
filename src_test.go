@@ -47,41 +47,32 @@ func TestSrcStreamerNext(t *testing.T) {
 		Convey("the files should be loaded in order", func() {
 			s := Stream{
 				&MockStreamer{
-					Files: []string{"foo", "bar"},
+					Files: []string{"foo"},
 				},
 				&MockStreamer{
-					Files: []string{"baz", "bat"},
+					Files: []string{"bar"},
 				},
 				&SrcStreamer{
 					Sources: []string{filepath.Join(tmpDir, "hello")},
 				},
 			}
-			fi, r, err := s.Next(nil, nil)
+			fi, r, err := s.NextFrom(0, nil, nil)
 			So(err, ShouldBeNil)
+			So(fi, ShouldNotBeNil)
 			So(fi.Name(), ShouldEqual, "foo")
 			b, _ := ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "foo content")
 
-			fi, r, err = s.Next(nil, nil)
+			fi, r, err = s.NextFrom(1, nil, nil)
 			So(err, ShouldBeNil)
+			So(fi, ShouldNotBeNil)
 			So(fi.Name(), ShouldEqual, "bar")
 			b, _ = ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "bar content")
 
-			fi, r, err = s.Next(nil, nil)
+			fi, r, err = s.NextFrom(2, nil, nil)
 			So(err, ShouldBeNil)
-			So(fi.Name(), ShouldEqual, "baz")
-			b, _ = ioutil.ReadAll(r)
-			So(string(b), ShouldEqual, "baz content")
-
-			fi, r, err = s.Next(nil, nil)
-			So(err, ShouldBeNil)
-			So(fi.Name(), ShouldEqual, "bat")
-			b, _ = ioutil.ReadAll(r)
-			So(string(b), ShouldEqual, "bat content")
-
-			fi, r, err = s.Next(nil, nil)
-			So(err, ShouldBeNil)
+			So(fi, ShouldNotBeNil)
 			So(fi.Name(), ShouldEqual, "hello")
 			b, _ = ioutil.ReadAll(r)
 			So(string(b), ShouldEqual, "hello")
