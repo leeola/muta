@@ -19,30 +19,6 @@ const srcPluginName string = "muta.Src"
 //
 // Note that we're just supporting the * glob star currently, as i believe
 // that's the only supported glob pattern, from the official lib.
-func globsToBase(globs ...string) string {
-	var base string
-	var depth int
-	var globChars string = "*"
-
-	for _, glob := range globs {
-		var gBase string
-		var gDepth int
-		if i := strings.IndexAny(glob, globChars); i > -1 {
-			gBase = filepath.Dir(glob[:i])
-		} else {
-			gBase = filepath.Dir(glob)
-		}
-		gDepth = strings.Count(gBase, string(filepath.Separator))
-		// If there is no base, or
-		// if the glob's depth is smaller (more base) than the depth
-		if base == "" || gDepth < depth {
-			base = gBase
-			depth = gDepth
-		}
-	}
-	return base
-}
-
 // Return a new Stream, with a SrcStreamer. If you need a Pipe()able
 // version of Src, see PipeableSrc()
 func Src(paths ...string) Stream {
@@ -121,4 +97,28 @@ func (s *SrcStreamer) Next(fi FileInfo, rc io.ReadCloser) (FileInfo,
 	}
 
 	return fi, f, nil
+}
+
+func globsToBase(globs ...string) string {
+	var base string
+	var depth int
+	var globChars string = "*"
+
+	for _, glob := range globs {
+		var gBase string
+		var gDepth int
+		if i := strings.IndexAny(glob, globChars); i > -1 {
+			gBase = filepath.Dir(glob[:i])
+		} else {
+			gBase = filepath.Dir(glob)
+		}
+		gDepth = strings.Count(gBase, string(filepath.Separator))
+		// If there is no base, or
+		// if the glob's depth is smaller (more base) than the depth
+		if base == "" || gDepth < depth {
+			base = gBase
+			depth = gDepth
+		}
+	}
+	return base
 }
