@@ -22,5 +22,6 @@ func main() {
 
 	// Proxy this bin input/output to the "muta" file
 	// in the current directory
-	goscriptify.RunOneScript("muta", "Muta", "muta.go", "muta/muta.go", ".muta/muta.go")
+	goscriptify.RunOneScriptOrDir(true,
+		"muta", "Muta", "muta.go", "muta/muta.go", ".muta/muta.go")
 }
